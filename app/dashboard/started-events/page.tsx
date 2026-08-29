@@ -6,21 +6,21 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ProposalCard } from "@/components/proposal/proposal-card";
 import { MilestonePanel } from "@/components/milestone/milestone-panel";
 import { Button } from "@/components/ui/button";
-import { OPERATOR_ADDRESS } from "@/lib/seed";
+import { useIsVerifier } from "@/lib/chain/hooks";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 
 export default function DashboardStartedPage() {
   const address = useAddress();
   const proposals = useSprkStore((s) => s.proposals);
-  const switchWallet = useSprkStore((s) => s.switchWallet);
   const mine = address
     ? proposals.filter((p) => p.creator.toLowerCase() === address.toLowerCase())
     : [];
   const queue = proposals.filter((p) =>
     p.milestones.some((m) => m.status === "submitted"),
   );
-  const isOperator = address.toLowerCase() === OPERATOR_ADDRESS.toLowerCase();
+  // Operator rights are on-chain: holding the AgenticVerifier NFT.
+  const { isVerifier } = useIsVerifier();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -68,19 +68,14 @@ export default function DashboardStartedPage() {
               <div>
                 <h2 className="font-display text-3xl tracking-tight">Operator queue</h2>
                 <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                  Validate milestone proofs. Switch to the Operator wallet to approve or reject.
+                  Validate milestone proofs. Requires the AgenticVerifier NFT.
                 </p>
               </div>
-              {!isOperator ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    switchWallet("operator");
-                    toast.message("Switched to operator");
-                  }}
-                >
-                  Switch to operator
-                </Button>
+              {!isVerifier ? (
+                <p className="max-w-xs text-xs text-muted-foreground">
+                  This wallet does not hold the AgenticVerifier NFT, so on-chain
+                  validation will revert.
+                </p>
               ) : null}
             </div>
             {queue.length === 0 ? (

@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { Address } from "viem";
 import { useAccount } from "wagmi";
 import { PageHeader } from "@/components/layout/page-header";
-import { ConnectChainWallet } from "@/components/og/connect-chain-wallet";
+import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { OperatorReview } from "@/components/og/operator-review";
 import { ProofUpload } from "@/components/og/proof-upload";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,7 @@ export default function MilestonesPage() {
         kicker="0G integration"
         title="Milestone proofs"
         description="Proof files are hashed into a 0G Storage Merkle root, the root is recorded on 0G Chain, and an AgenticVerifier NFT holder validates the milestone."
-        action={<ConnectChainWallet />}
+        action={<ConnectWallet />}
       />
 
       <div className="mt-8 flex flex-wrap gap-2">

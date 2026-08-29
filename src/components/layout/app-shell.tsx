@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { Footer } from "./footer";
 import { Nav } from "./nav";
-import { useSprkStore } from "@/lib/sprk-store";
+import { useSprkSync } from "@/lib/sprk-store";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  useEffect(() => {
-    void useSprkStore.persist.rehydrate();
-    useSprkStore.getState().setHydrated(true);
-  }, []);
+  // Mirrors the connected wallet into the store and loads proposals from Neon.
+  useSprkSync();
 
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">

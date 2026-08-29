@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
-import { OPERATOR_ADDRESS } from "@/lib/seed";
+import type { Address } from "viem";
+import { contracts } from "@/lib/chain/config";
+import { useIsVerifier, useProposalState } from "@/lib/chain/hooks";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import type { Milestone, Proposal } from "@/lib/types";
 
@@ -22,13 +24,18 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
   const address = useAddress();
   const submitMilestone = useSprkStore((s) => s.submitMilestone);
   const validateMilestone = useSprkStore((s) => s.validateMilestone);
-  const switchWallet = useSprkStore((s) => s.switchWallet);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [proof, setProof] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const contractAddress = (proposal.contractAddress ?? contracts.collab) as Address;
+  const { milestoneIndex } = useProposalState(contractAddress);
+  const onChainIndex = milestoneIndex ?? 0;
 
   const isCreator = address.toLowerCase() === proposal.creator.toLowerCase();
-  const isOperator = address.toLowerCase() === OPERATOR_ADDRESS.toLowerCase();
+  // Operator rights come from holding the AgenticVerifier NFT on 0G.
+  const { isVerifier: isOperator } = useIsVerifier();
   const showForm = isCreator && proposal.status === "active";
 
   return (
@@ -85,21 +92,54 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
       {showForm ? (
         <form
           className="grid gap-3 rounded-xl border border-border bg-card p-5"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             if (title.trim().length < 3 || description.trim().length < 8) {
               toast.error("Add a title and a short proof note");
               return;
             }
-            submitMilestone(proposal.id, {
-              title,
-              description,
-              proof: proof || "ipfs://proof",
-            });
-            setTitle("");
-            setDescription("");
-            setProof("");
-            toast.success("Milestone submitted for review");
+            if (!file) {
+              toast.error("Attach the proof file");
+              return;
+            }
+
+            setUploading(true);
+            try {
+              // Push the proof through 0G Storage first: the returned Merkle
+              // root is what gets recorded on-chain and stored against the
+              // milestone, so a failed upload must not create a bare record.
+              const body = new FormData();
+              body.append("file", file);
+              const res = await fetch(
+                `/api/milestones/${contractAddress}/${onChainIndex}/proof`,
+                { method: "POST", body },
+              );
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error ?? "0G upload failed");
+
+              submitMilestone(proposal.id, {
+                title,
+                description,
+                rootHash: data.rootHash,
+                chainTxHash: data.chainTxHash,
+                milestoneIndex: onChainIndex,
+              });
+
+              setTitle("");
+              setDescription("");
+              setFile(null);
+              toast.success(
+                data.degraded
+                  ? "Proof root recorded on-chain (0G Storage upload degraded)"
+                  : "Proof stored on 0G and recorded on-chain",
+              );
+            } catch (error) {
+              toast.error(
+                error instanceof Error ? error.message : "Proof submission failed",
+              );
+            } finally {
+              setUploading(false);
+            }
           }}
         >
           <p className="text-sm font-medium">Submit milestone</p>
@@ -121,16 +161,18 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="ms-proof">Proof link</Label>
+            <Label htmlFor="ms-proof">Proof file</Label>
             <Input
               id="ms-proof"
-              value={proof}
-              onChange={(e) => setProof(e.target.value)}
-              placeholder="ipfs://… or https://…"
+              type="file"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
+            <p className="text-xs text-muted-foreground">
+              Hashed into a 0G Storage Merkle root and recorded on 0G Chain.
+            </p>
           </div>
-          <Button type="submit" className="self-start">
-            Submit for validation
+          <Button type="submit" className="self-start" disabled={uploading}>
+            {uploading ? "Storing proof on 0G…" : "Submit for validation"}
           </Button>
         </form>
       ) : null}
@@ -139,18 +181,8 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
       proposal.milestones.some((m) => m.status === "submitted") &&
       !isOperator ? (
         <p className="text-xs text-muted-foreground">
-          Operator review is pending.{" "}
-          <button
-            type="button"
-            className="underline underline-offset-4"
-            onClick={() => {
-              switchWallet("operator");
-              toast.message("Switched to operator");
-            }}
-          >
-            Switch to the operator wallet
-          </button>{" "}
-          to approve or reject.
+          Operator review is pending. Connect the wallet holding the
+          AgenticVerifier NFT to approve or reject.
         </p>
       ) : null}
     </div>

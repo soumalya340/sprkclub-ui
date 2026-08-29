@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, ChevronDown, Wallet } from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, TriangleAlert, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,29 +12,56 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { hasProjectId, openAppKit } from "@/lib/chain/appkit";
+import { activeChain, explorerAddress } from "@/lib/chain/config";
+import { useIsVerifier } from "@/lib/chain/hooks";
 import { truncateAddress } from "@/lib/format";
-import { useSprkStore } from "@/lib/sprk-store";
 
+/**
+ * Real wallet connection. Opens the WalletConnect/AppKit modal when a Reown
+ * project id is configured, and falls back to the injected connector
+ * (MetaMask, Rabby) when it isn't.
+ */
 export function ConnectWallet({ compact = false }: { compact?: boolean }) {
-  const connected = useSprkStore((s) => s.connected);
-  const wallets = useSprkStore((s) => s.wallets);
-  const activeWalletId = useSprkStore((s) => s.activeWalletId);
-  const connect = useSprkStore((s) => s.connect);
-  const disconnect = useSprkStore((s) => s.disconnect);
-  const switchWallet = useSprkStore((s) => s.switchWallet);
-  const active = wallets.find((w) => w.id === activeWalletId);
+  const { address, isConnected, chainId } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
+  const { isVerifier } = useIsVerifier();
 
-  if (!connected || !active) {
+  const wrongChain = isConnected && chainId !== activeChain.id;
+
+  function startConnect() {
+    if (hasProjectId) {
+      void openAppKit();
+      return;
+    }
+    const injected = connectors.find((c) => c.type === "injected") ?? connectors[0];
+    if (!injected) {
+      toast.error("No wallet found. Install MetaMask, or set NEXT_PUBLIC_REOWN_PROJECT_ID.");
+      return;
+    }
+    connect({ connector: injected });
+  }
+
+  if (!isConnected || !address) {
+    return (
+      <Button size={compact ? "sm" : "default"} disabled={isPending} onClick={startConnect}>
+        <Wallet />
+        {isPending ? "Connecting…" : "Connect wallet"}
+      </Button>
+    );
+  }
+
+  if (wrongChain) {
     return (
       <Button
         size={compact ? "sm" : "default"}
-        onClick={() => {
-          connect();
-          toast.success("Wallet connected");
-        }}
+        variant="outline"
+        onClick={() => switchChain({ chainId: activeChain.id })}
       >
-        <Wallet />
-        Connect wallet
+        <TriangleAlert className="text-warn" />
+        Switch network
       </Button>
     );
   }
@@ -41,38 +69,44 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size={compact ? "sm" : "default"} className="font-mono text-xs">
+        <Button
+          variant="outline"
+          size={compact ? "sm" : "default"}
+          className="font-mono text-xs"
+        >
           <span className="size-1.5 rounded-full bg-success" />
-          {truncateAddress(active.address)}
+          {truncateAddress(address)}
           <ChevronDown className="size-3.5 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Demo wallets</DropdownMenuLabel>
-        {wallets.map((w) => (
-          <DropdownMenuItem
-            key={w.id}
-            onClick={() => {
-              switchWallet(w.id);
-              toast.message(`Switched to ${w.label}`);
-            }}
-          >
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="text-sm">{w.label}</span>
-              <span className="font-mono text-xs text-muted-foreground">
-                {truncateAddress(w.address, 5)}
-              </span>
-            </div>
-            {w.id === activeWalletId ? <Check className="size-4" /> : null}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuLabel className="flex items-center justify-between gap-2">
+          <span>{activeChain.name}</span>
+          {isVerifier ? (
+            <span className="flex items-center gap-1 text-xs font-normal text-success">
+              <ShieldCheck className="size-3.5" />
+              Verifier
+            </span>
+          ) : null}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {hasProjectId ? (
+          <DropdownMenuItem onClick={() => void openAppKit("Account")}>
+            Wallet details
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem asChild>
+          <a href={explorerAddress(address)} target="_blank" rel="noreferrer">
+            View on explorer
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
             disconnect();
             toast.message("Wallet disconnected");
           }}
         >
+          <LogOut />
           Disconnect
         </DropdownMenuItem>
       </DropdownMenuContent>

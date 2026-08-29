@@ -62,12 +62,3 @@ export function newId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
 }
 
-export function randomAddress(): string {
-  const bytes = new Uint8Array(20);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    crypto.getRandomValues(bytes);
-  } else {
-    for (let i = 0; i < 20; i++) bytes[i] = Math.floor(Math.random() * 256);
-  }
-  return `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")}`;
-}

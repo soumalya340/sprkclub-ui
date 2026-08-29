@@ -56,12 +56,8 @@ export interface Proposal {
   disputedBy?: string;
   disputeReason?: string;
   withdrawn: boolean;
-}
-
-export interface WalletSlot {
-  id: string;
-  label: string;
-  address: string;
+  /** Deployed SprkClub contract, once the proposal is live on 0G Chain. */
+  contractAddress?: string;
 }
 
 export interface CreateProposalInput {
