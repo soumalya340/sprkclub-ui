@@ -43,6 +43,10 @@ const menus = [
       { href: "/dashboard/started-events", label: "Started events" },
     ],
   },
+  {
+    label: "0G",
+    items: [{ href: "/milestones", label: "Milestone proofs" }],
+  },
 ] as const;
 
 export function Nav() {
