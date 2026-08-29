@@ -6,7 +6,9 @@ Next.js App Router port of the dark Sprkclub demo UI (DAO + NFT proposals, votin
 
 - Next.js (App Router) + React 19
 - Tailwind CSS v4 (`src/styles.css`)
-- Zustand (demo wallet / proposals state)
+- Zustand (client state, hydrated from the API)
+- Neon Postgres + Drizzle ORM (proposals, votes, backers, milestones)
+- RainbowKit + WalletConnect (real wallet connection)
 - Radix UI + lucide-react + sonner
 - wagmi + viem (real wallet on 0G Chain)
 - `@0glabs/0g-ts-sdk` (0G Storage, server-side only)
@@ -25,6 +27,10 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run dev` — local Next.js server
 - `npm run build` — production build
 - `npm run typecheck` — `tsc --noEmit`
+- `npm run db:generate` — regenerate SQL from `src/lib/db/schema.ts`
+- `npm run db:migrate` — apply migrations to Neon
+- `npm run db:seed` — load the demo proposals (skips ids that already exist)
+- `npm run abi:sync` — re-export contract ABIs from the Foundry build
 
 ## App routes
 
@@ -43,6 +49,69 @@ Open [http://localhost:3000](http://localhost:3000).
 
 UI components live under `src/components`; shared lib under `src/lib`.
 
+
+
+---
+
+# Data & wallets
+
+## Neon Postgres
+
+Off-chain app state lives in Neon, not `localStorage`. Four tables
+(`src/lib/db/schema.ts`): `proposals`, `votes`, `backers`, `milestones` —
+addresses stored lowercased, votes unique per `(proposal, wallet)`, and children
+cascade on proposal delete.
+
+```bash
+npm run db:migrate   # create tables
+npm run db:seed      # load the four demo proposals
+```
+
+Reads and writes go through Route Handlers:
+
+| Route | Purpose |
+|---|---|
+| `GET /api/proposals` | All proposals with votes, backers and milestones joined |
+| `POST /api/proposals` | Create a proposal (attributed to the connected wallet) |
+| `GET /api/proposals/:id` | One proposal |
+| `POST /api/proposals/:id/actions` | `vote`, `convert`, `stake`, `mint`, `withdraw`, `dispute`, `claimback`, `submit-milestone`, `review-milestone` |
+
+Every mutation re-reads the proposal server-side and checks the rules there —
+creators cannot vote on their own proposal, only backers can dispute, minting
+requires the creator to have staked, and so on. The client never decides.
+
+**On the trust boundary:** these routes take the caller's wallet address from
+the request body and validate its *shape* only — they do not prove key
+ownership. That is deliberate and safe for what they guard, which is off-chain
+bookkeeping. Everything that moves value or unlocks funds is enforced on-chain
+by `onlyProposalCreator` / `onlyOperator`, which a forged address here cannot
+bypass. Add a SIWE signature check before treating this as an authorization
+boundary in its own right.
+
+## Wallet connection
+
+Real wallets via RainbowKit over the WalletConnect protocol, configured in
+`src/lib/chain/wagmi.ts`. The old five-slot demo wallet switcher is gone:
+`useAddress()` now returns the connected account, and "who is the operator" is
+answered on-chain by `AgenticVerifier.balanceOf(caller) > 0` rather than by a
+hardcoded address.
+
+WalletConnect QR and mobile wallets need a free project id from
+[cloud.walletconnect.com](https://cloud.walletconnect.com):
+
+```bash
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<your id>
+```
+
+Without it the app still works — the WalletConnect option is dropped from the
+list and injected wallets (MetaMask, Rabby, Trust, Safe) are used instead.
+
+The wallet list is built explicitly with `connectorsForWallets` rather than
+`getDefaultConfig`, and `next.config.ts` aliases a handful of `@x402/*` modules
+to `src/lib/chain/x402-stub.ts`. Both work around the same thing: the Coinbase
+Smart Wallet connector bundled in `@wagmi/connectors` lazily imports optional
+payment packages that aren't installed. They never execute — the bundler just
+has to resolve them.
 
 ---
 
@@ -144,9 +213,13 @@ Create `.env.local`:
 
 ```bash
 OG_PRIVATE_KEY=<hex key, funded on 0G; server-side only, never NEXT_PUBLIC_>
-NEXT_PUBLIC_OG_NETWORK=testnet   # or "mainnet"
-# OG_STRICT_STORAGE=1            # fail instead of degrading on Storage errors
+NEXT_PUBLIC_OG_NETWORK=testnet          # or "mainnet"
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<id> # optional; enables WalletConnect QR
+# OG_STRICT_STORAGE=1                   # fail instead of degrading on Storage errors
 ```
+
+Neon credentials (`DATABASE_URL` and friends) live in `.env`. Both files are
+gitignored.
 
 `OG_PRIVATE_KEY` signs Storage uploads and `submitMileStoneProof`, so it must be
 the proposal creator's key for the on-chain write to pass `onlyProposalCreator`.

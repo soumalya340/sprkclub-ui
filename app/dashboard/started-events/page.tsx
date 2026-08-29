@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProposalCard } from "@/components/proposal/proposal-card";
 import { MilestonePanel } from "@/components/milestone/milestone-panel";

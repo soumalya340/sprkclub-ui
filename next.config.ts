@@ -1,16 +1,17 @@
 import type { NextConfig } from "next";
 
+// See src/lib/chain/x402-stub.ts — unused optional deps of the bundled
+// Coinbase connector that would otherwise fail resolution at build time.
+const x402Stub = "./src/lib/chain/x402-stub.ts";
+
 const nextConfig: NextConfig = {
-  // The Coinbase connector inside @reown/appkit reaches for optional x402
-  // payment packages we neither install nor use (enableCoinbase is off).
-  // Stub them so the bundler stops trying to resolve them.
   turbopack: {
     resolveAlias: {
-      "@x402/core/client": "./src/lib/chain/empty-module.ts",
-      "@x402/evm": "./src/lib/chain/empty-module.ts",
-      "@x402/evm/exact/client": "./src/lib/chain/empty-module.ts",
-      "@x402/evm/upto/client": "./src/lib/chain/empty-module.ts",
-      "@x402/svm/exact/client": "./src/lib/chain/empty-module.ts",
+      "@x402/core/client": x402Stub,
+      "@x402/evm": x402Stub,
+      "@x402/evm/exact/client": x402Stub,
+      "@x402/evm/upto/client": x402Stub,
+      "@x402/svm/exact/client": x402Stub,
     },
   },
 };
