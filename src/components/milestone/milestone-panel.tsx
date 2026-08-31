@@ -65,9 +65,9 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
                 <div className="mt-3 flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => {
-                      validateMilestone(proposal.id, m.id, true);
-                      toast.success("Milestone approved");
+                    onClick={async () => {
+                      const ok = await validateMilestone(proposal.id, m.id, true);
+                      if (ok) toast.success("Milestone approved");
                     }}
                   >
                     Approve
@@ -75,9 +75,9 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
-                      validateMilestone(proposal.id, m.id, false);
-                      toast.message("Milestone rejected");
+                    onClick={async () => {
+                      const ok = await validateMilestone(proposal.id, m.id, false);
+                      if (ok) toast.message("Milestone rejected");
                     }}
                   >
                     Reject
@@ -117,13 +117,14 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
               const data = await res.json();
               if (!res.ok) throw new Error(data.error ?? "0G upload failed");
 
-              submitMilestone(proposal.id, {
+              const ok = await submitMilestone(proposal.id, {
                 title,
                 description,
                 rootHash: data.rootHash,
                 chainTxHash: data.chainTxHash,
                 milestoneIndex: onChainIndex,
               });
+              if (!ok) return;
 
               setTitle("");
               setDescription("");

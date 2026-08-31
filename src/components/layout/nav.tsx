@@ -37,13 +37,6 @@ const menus = [
     ],
   },
   {
-    label: "Dashboard",
-    items: [
-      { href: "/dashboard/crowdfunding-events", label: "Backed events" },
-      { href: "/dashboard/started-events", label: "Started events" },
-    ],
-  },
-  {
     label: "0G",
     items: [{ href: "/milestones", label: "Milestone proofs" }],
   },

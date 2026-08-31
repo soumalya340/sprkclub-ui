@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/proposal/status-badge";
 import { VotePanel } from "@/components/proposal/vote-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatAmount,
   formatDate,
@@ -20,7 +21,30 @@ export default function ProposalDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const proposal = useSprkStore((s) => s.proposals.find((p) => p.id === id));
+  const hydrated = useSprkStore((s) => s.hydrated);
   const address = useAddress();
+
+  if (!hydrated) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6" aria-busy="true">
+        <div className="grid gap-10 lg:grid-cols-[1fr_22rem]">
+          <div>
+            <Skeleton className="aspect-[3/2] w-full rounded-xl" />
+            <div className="mt-6 flex gap-2">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+            <Skeleton className="mt-4 h-10 w-3/4" />
+            <Skeleton className="mt-4 h-4 w-full" />
+            <Skeleton className="mt-2 h-4 w-5/6" />
+          </div>
+          <aside className="flex flex-col gap-4">
+            <Skeleton className="h-48 w-full rounded-xl" />
+          </aside>
+        </div>
+      </div>
+    );
+  }
 
   if (!proposal) {
     return (

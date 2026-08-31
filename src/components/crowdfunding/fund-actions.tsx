@@ -51,9 +51,11 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
       {proposal.status === "crowdfunding" && !proposal.staked ? (
         isCreator ? (
           <Button
-            onClick={() => {
-              stake(proposal.id);
-              toast.success(`Staked ${formatAmount(stakeNeed, proposal.stablecoin)}`);
+            onClick={async () => {
+              const ok = await stake(proposal.id);
+              if (ok) {
+                toast.success(`Staked ${formatAmount(stakeNeed, proposal.stablecoin)}`);
+              }
             }}
           >
             Stake {formatAmount(stakeNeed, proposal.stablecoin)}
@@ -67,9 +69,13 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
 
       {proposal.staked && !funded && proposal.status === "crowdfunding" ? (
         <Button
-          onClick={() => {
-            mint(proposal.id);
-            toast.success(`Minted 1 NFT for ${formatAmount(proposal.pricePerNft, proposal.stablecoin)}`);
+          onClick={async () => {
+            const ok = await mint(proposal.id);
+            if (ok) {
+              toast.success(
+                `Minted 1 NFT for ${formatAmount(proposal.pricePerNft, proposal.stablecoin)}`,
+              );
+            }
           }}
         >
           Mint NFT · {formatAmount(proposal.pricePerNft, proposal.stablecoin)}
@@ -80,9 +86,9 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
         isCreator ? (
           <Button
             disabled={!approved || proposal.withdrawn}
-            onClick={() => {
-              withdraw(proposal.id);
-              toast.success("Funds withdrawn");
+            onClick={async () => {
+              const ok = await withdraw(proposal.id);
+              if (ok) toast.success("Funds withdrawn");
             }}
           >
             {proposal.withdrawn ? "Funds withdrawn" : "Withdraw funds"}
@@ -117,13 +123,13 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
             <DialogFooter>
               <Button
                 variant="destructive"
-                onClick={() => {
+                onClick={async () => {
                   if (reason.trim().length < 8) {
                     toast.error("Add a short reason");
                     return;
                   }
-                  dispute(proposal.id, reason.trim());
-                  toast.message("Dispute opened");
+                  const ok = await dispute(proposal.id, reason.trim());
+                  if (ok) toast.message("Dispute opened");
                 }}
               >
                 Confirm dispute
@@ -136,11 +142,13 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
       {backer && (proposal.status === "disputed" || proposal.status === "failed") ? (
         <Button
           variant="outline"
-          onClick={() => {
-            claimback(proposal.id);
-            toast.success(
-              `Claimed ${formatAmount(backer.amount, proposal.stablecoin)} back`,
-            );
+          onClick={async () => {
+            const ok = await claimback(proposal.id);
+            if (ok) {
+              toast.success(
+                `Claimed ${formatAmount(backer.amount, proposal.stablecoin)} back`,
+              );
+            }
           }}
         >
           Claimback {formatAmount(backer.amount, proposal.stablecoin)}

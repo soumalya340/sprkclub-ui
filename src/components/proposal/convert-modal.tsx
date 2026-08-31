@@ -104,12 +104,17 @@ export function ConvertModal({
         </div>
         <DialogFooter>
           <Button
-            onClick={() => {
+            onClick={async () => {
               if (!canLaunch) {
                 toast.error("Only the creator can launch a passed proposal");
                 return;
               }
-              convertProposal(proposal.id, { stablecoin, startDate, endDate });
+              const ok = await convertProposal(proposal.id, {
+                stablecoin,
+                startDate,
+                endDate,
+              });
+              if (!ok) return;
               toast.success("Proposal converted");
               setOpen(false);
               router.push(`/explore/crowdfunding-events/${proposal.id}`);

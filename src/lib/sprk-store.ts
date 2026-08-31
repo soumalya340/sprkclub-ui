@@ -44,13 +44,13 @@ export interface SprkState {
   refresh: () => Promise<void>;
 
   createProposal: (input: CreateProposalInput) => Promise<string | null>;
-  vote: (proposalId: string, kind: VoteKind) => void;
-  convertProposal: (proposalId: string, input: ConvertInput) => void;
-  stake: (proposalId: string) => void;
-  mint: (proposalId: string) => void;
-  withdraw: (proposalId: string) => void;
-  dispute: (proposalId: string, reason: string) => void;
-  claimback: (proposalId: string) => void;
+  vote: (proposalId: string, kind: VoteKind) => Promise<boolean>;
+  convertProposal: (proposalId: string, input: ConvertInput) => Promise<boolean>;
+  stake: (proposalId: string) => Promise<boolean>;
+  mint: (proposalId: string) => Promise<boolean>;
+  withdraw: (proposalId: string) => Promise<boolean>;
+  dispute: (proposalId: string, reason: string) => Promise<boolean>;
+  claimback: (proposalId: string) => Promise<boolean>;
   submitMilestone: (
     proposalId: string,
     input: {
@@ -61,21 +61,25 @@ export interface SprkState {
       chainTxHash?: string;
       milestoneIndex?: number;
     },
-  ) => void;
+  ) => Promise<boolean>;
   validateMilestone: (
     proposalId: string,
     milestoneId: string,
     approve: boolean,
-  ) => void;
+  ) => Promise<boolean>;
 }
 
 export const useSprkStore = create<SprkState>()((set, get) => {
-  /** Runs a mutation, then replaces the affected proposal with the server's copy. */
-  async function act(proposalId: string, body: Record<string, unknown>) {
+  /**
+   * Runs a mutation, then replaces the affected proposal with the server's
+   * copy. Returns whether it succeeded so callers can gate optimistic UI
+   * (toasts, redirects) on the real result instead of firing immediately.
+   */
+  async function act(proposalId: string, body: Record<string, unknown>): Promise<boolean> {
     const { address } = get();
     if (!address) {
       toast.error("Connect a wallet first");
-      return;
+      return false;
     }
     try {
       const { proposal } = await api<{ proposal: Proposal }>(
@@ -85,8 +89,10 @@ export const useSprkStore = create<SprkState>()((set, get) => {
       set((s) => ({
         proposals: s.proposals.map((p) => (p.id === proposal.id ? proposal : p)),
       }));
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Action failed");
+      return false;
     }
   }
 
@@ -136,19 +142,19 @@ export const useSprkStore = create<SprkState>()((set, get) => {
       }
     },
 
-    vote: (proposalId, kind) => void act(proposalId, { action: "vote", kind }),
+    vote: (proposalId, kind) => act(proposalId, { action: "vote", kind }),
     convertProposal: (proposalId, input) =>
-      void act(proposalId, { action: "convert", ...input }),
-    stake: (proposalId) => void act(proposalId, { action: "stake" }),
-    mint: (proposalId) => void act(proposalId, { action: "mint" }),
-    withdraw: (proposalId) => void act(proposalId, { action: "withdraw" }),
+      act(proposalId, { action: "convert", ...input }),
+    stake: (proposalId) => act(proposalId, { action: "stake" }),
+    mint: (proposalId) => act(proposalId, { action: "mint" }),
+    withdraw: (proposalId) => act(proposalId, { action: "withdraw" }),
     dispute: (proposalId, reason) =>
-      void act(proposalId, { action: "dispute", reason }),
-    claimback: (proposalId) => void act(proposalId, { action: "claimback" }),
+      act(proposalId, { action: "dispute", reason }),
+    claimback: (proposalId) => act(proposalId, { action: "claimback" }),
     submitMilestone: (proposalId, input) =>
-      void act(proposalId, { action: "submit-milestone", ...input }),
+      act(proposalId, { action: "submit-milestone", ...input }),
     validateMilestone: (proposalId, milestoneId, approve) =>
-      void act(proposalId, { action: "review-milestone", milestoneId, approve }),
+      act(proposalId, { action: "review-milestone", milestoneId, approve }),
   };
 });
 

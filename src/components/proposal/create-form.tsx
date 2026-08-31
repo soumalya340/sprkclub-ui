@@ -66,14 +66,15 @@ export function CreateProposalForm() {
     <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
       <form
         className="flex flex-col gap-5 rounded-xl border border-border bg-card p-6 sm:p-8"
-        onSubmit={form.handleSubmit((values) => {
+        onSubmit={form.handleSubmit(async (values) => {
           if (values.fundingGoal < values.pricePerNft) {
             form.setError("fundingGoal", {
               message: "Goal should be at least one NFT",
             });
             return;
           }
-          const id = createProposal(values);
+          const id = await createProposal(values);
+          if (!id) return;
           toast.success(`${values.title} has been created`);
           router.push(`/proposal/${id}`);
         })}
