@@ -156,7 +156,7 @@ export async function createProposal(
     id,
     title: input.title.trim(),
     description: input.description.trim(),
-    cover: pickCover(input.title),
+    cover: input.cover?.trim() || pickCover(input.title),
     pricePerNft: input.pricePerNft,
     fundingGoal: input.fundingGoal,
     type: input.type,
@@ -164,13 +164,17 @@ export async function createProposal(
     creator: norm(creator),
     createdAt: Date.now(),
     status: "voting",
-    stablecoin: "USDC",
+    stablecoin: "MTK",
   });
 
   return (await getProposal(id))!;
 }
 
-/** Upserts a vote — a wallet re-voting replaces its previous choice. */
+/**
+ * Upserts a vote — a wallet re-voting replaces its previous choice — then
+ * re-tallies and flips a "voting" proposal to "passed" once support reaches
+ * 55% (matching the client-side isPassed() threshold).
+ */
 export async function castVote(proposalId: string, voter: string, kind: VoteKind) {
   await db
     .insert(votes)
@@ -179,6 +183,22 @@ export async function castVote(proposalId: string, voter: string, kind: VoteKind
       target: [votes.proposalId, votes.voter],
       set: { kind },
     });
+
+  const rows = await db
+    .select({ kind: votes.kind })
+    .from(votes)
+    .where(eq(votes.proposalId, proposalId));
+
+  const likes = rows.filter((r) => r.kind === "like").length;
+  const total = rows.length;
+  const share = total > 0 ? (likes / total) * 100 : 0;
+
+  if (total >= 1 && share >= 55) {
+    await db
+      .update(proposals)
+      .set({ status: "passed", updatedAt: new Date() })
+      .where(and(eq(proposals.id, proposalId), eq(proposals.status, "voting")));
+  }
 }
 
 export async function convertProposal(proposalId: string, input: ConvertInput) {

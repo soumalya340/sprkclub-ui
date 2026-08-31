@@ -1,4 +1,4 @@
-// Auto-exported from Foundry build output (deps/sprkclub-smartcontract/out/AgenticVerifier.sol/AgenticVerifier.json).
+// Auto-exported from Foundry build output (../sprkclub-smartcontract/out/AgenticVerifier.sol/AgenticVerifier.json).
 // Regenerate with: npm run abi:sync
 export const AgenticVerifierAbi = [
   {

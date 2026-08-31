@@ -97,7 +97,7 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
           <p className="text-sm text-muted-foreground">
             {proposal.type === "holder"
               ? "Holder events share later yield with NFT owners after delivery."
-              : "Creator can withdraw once an operator validates a milestone."}
+              : "Creator can withdraw the next tranche after a milestone is finalized (or Alice wins a challenge)."}
           </p>
         )
       ) : null}

@@ -21,12 +21,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const creator = requireAddress(body.address);
 
-    const { title, description, pricePerNft, fundingGoal, type, validTill } = body;
+    const { title, description, cover, pricePerNft, fundingGoal, type, validTill } = body;
     if (typeof title !== "string" || title.trim().length < 3) {
       return NextResponse.json({ error: "Title is too short" }, { status: 400 });
     }
     if (typeof description !== "string" || description.trim().length < 8) {
       return NextResponse.json({ error: "Description is too short" }, { status: 400 });
+    }
+    if (cover !== undefined && (typeof cover !== "string" || !cover.startsWith("https://"))) {
+      return NextResponse.json({ error: "Invalid cover image" }, { status: 400 });
     }
     if (!(pricePerNft > 0) || !(fundingGoal > 0)) {
       return NextResponse.json(
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     const proposal = await createProposal(
-      { title, description, pricePerNft, fundingGoal, type, validTill },
+      { title, description, cover, pricePerNft, fundingGoal, type, validTill },
       creator,
     );
     return NextResponse.json({ proposal }, { status: 201 });

@@ -1,9 +1,15 @@
-// Auto-exported from Foundry build output (deps/sprkclub-smartcontract/out/Token.sol/MyToken.json).
+// Auto-exported from Foundry build output (/Users/soumalyapaul/Documents/EVM/TokenFest/sprkclub-smartcontract/out/SprkCoin.sol/SprkToken.json).
 // Regenerate with: npm run abi:sync
 export const MyTokenAbi = [
   {
     "type": "constructor",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "contractAddr",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -137,15 +143,9 @@ export const MyTokenAbi = [
   {
     "type": "function",
     "name": "mint",
-    "inputs": [
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "inputs": [],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -237,6 +237,13 @@ export const MyTokenAbi = [
         "internalType": "bool"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdraw",
+    "inputs": [],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {

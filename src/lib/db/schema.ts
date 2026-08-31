@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 /**
- * Off-chain app state. On-chain truth (milestone proof roots, validate())
+ * Off-chain app state. On-chain truth (proof roots, audit roots, dispute status)
  * lives on 0G Chain — these tables hold the parts of the product that were
  * never on-chain: drafts, votes, backer records and milestone metadata.
  *

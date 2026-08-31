@@ -1,4 +1,4 @@
-// Auto-exported from Foundry build output (deps/sprkclub-smartcontract/out/SprkClubCollab.sol/SprkClubCollab.json).
+// Auto-exported from Foundry build output (../sprkclub-smartcontract/out/SprkClubCollab.sol/SprkClubCollab.json).
 // Regenerate with: npm run abi:sync
 export const SprkClubCollabAbi = [
   {
@@ -33,9 +33,40 @@ export const SprkClubCollabAbi = [
         "name": "contractAddr",
         "type": "address[]",
         "internalType": "address[]"
+      },
+      {
+        "name": "_relayer",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "DISPUTE_WINDOW",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "VOTE_PERIOD",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -54,6 +85,44 @@ export const SprkClubCollabAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "auditRecordedAt",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "auditRootHash",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -86,6 +155,19 @@ export const SprkClubCollabAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "challenge",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -123,6 +205,32 @@ export const SprkClubCollabAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "disputeBond",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "finalizeMilestone",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -178,6 +286,30 @@ export const SprkClubCollabAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasVoted",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -268,6 +400,50 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "function",
+    "name": "milestoneChallenge",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "challenger",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "bond",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "voteEnd",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "votesForAlice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "votesForBob",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "resolved",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "milestoneProofRoots",
     "inputs": [
       {
@@ -286,6 +462,25 @@ export const SprkClubCollabAbi = [
         "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "milestoneStatus",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum SprkClubCollab.MilestoneStatus"
       }
     ],
     "stateMutability": "view"
@@ -376,6 +571,24 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "function",
+    "name": "recordAuditRoot",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "root",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "refundAmount",
     "inputs": [
       {
@@ -411,6 +624,32 @@ export const SprkClubCollabAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "relayer",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "resolveChallenge",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -528,6 +767,19 @@ export const SprkClubCollabAbi = [
         "name": "time",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setRelayer",
+    "inputs": [
+      {
+        "name": "newRelayer",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [],
@@ -730,15 +982,15 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "function",
-    "name": "validate",
+    "name": "vote",
     "inputs": [
       {
-        "name": "result",
-        "type": "bool",
-        "internalType": "bool"
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        "name": "proposalRejectedStatus",
+        "name": "supportAlice",
         "type": "bool",
         "internalType": "bool"
       }
@@ -845,6 +1097,31 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "event",
+    "name": "AuditRootRecorded",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "rootHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "windowEnd",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "FundWithdrawnByHandler",
     "inputs": [
       {
@@ -895,6 +1172,50 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "event",
+    "name": "MilestoneChallenged",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "challenger",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "bond",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "voteEnd",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MilestoneFinalized",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "MilestoneProofRecorded",
     "inputs": [
       {
@@ -908,6 +1229,37 @@ export const SprkClubCollabAbi = [
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MilestoneRejected",
+    "inputs": [
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "bountyPaid",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "backerSharePaid",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -1021,25 +1373,31 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "event",
-    "name": "Validate",
+    "name": "VoteCast",
     "inputs": [
       {
-        "name": "isPaused",
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "voter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "supportAlice",
         "type": "bool",
         "indexed": false,
         "internalType": "bool"
       },
       {
-        "name": "isproposalCleared",
-        "type": "bool",
+        "name": "weight",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "bool"
-      },
-      {
-        "name": "isproposalRejected",
-        "type": "bool",
-        "indexed": false,
-        "internalType": "bool"
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -1051,7 +1409,57 @@ export const SprkClubCollabAbi = [
   },
   {
     "type": "error",
+    "name": "SprkClubCollab__AlreadyResolved",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__AlreadyVoted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__ChallengeAlreadyOpen",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__DisputeWindowElapsed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__DisputeWindowNotElapsed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__InvalidMilestoneStatus",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__NoOpenChallenge",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__NoVotingPower",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "SprkClubCollab__ProposalRejected",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__VotePeriodNotOver",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SprkClubCollab__VotePeriodOver",
     "inputs": []
   }
 ] as const;

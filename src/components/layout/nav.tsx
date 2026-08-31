@@ -23,22 +23,11 @@ import {
 
 const menus = [
   {
-    label: "Launch",
-    items: [
-      { href: "/launch/create-proposal", label: "Create proposal" },
-      { href: "/launch/convert-proposal", label: "Convert proposal" },
-    ],
-  },
-  {
     label: "Explore",
     items: [
       { href: "/explore/ongoing-proposals", label: "Ongoing proposals" },
       { href: "/explore/crowdfunding-events", label: "Crowdfunding events" },
     ],
-  },
-  {
-    label: "0G",
-    items: [{ href: "/milestones", label: "Milestone proofs" }],
   },
 ] as const;
 
@@ -51,6 +40,12 @@ export function Nav() {
         <Logo />
 
         <nav className="hidden items-center gap-1 md:flex">
+          <Button asChild variant="ghost" className="text-sm font-medium">
+            <Link href="/launch">Launch</Link>
+          </Button>
+          <Button asChild variant="ghost" className="text-sm font-medium">
+            <Link href="/faucet">Faucet</Link>
+          </Button>
           {menus.map((menu) => (
             <DropdownMenu key={menu.label}>
               <DropdownMenuTrigger asChild>
@@ -86,6 +81,24 @@ export function Nav() {
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-6">
                 <ConnectWallet />
+                <SheetClose asChild>
+                  <Link
+                    href="/launch"
+                    className="rounded-md text-base font-medium text-foreground"
+                    onClick={() => setOpen(false)}
+                  >
+                    Launch
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    href="/faucet"
+                    className="rounded-md text-base font-medium text-foreground"
+                    onClick={() => setOpen(false)}
+                  >
+                    Faucet
+                  </Link>
+                </SheetClose>
                 {menus.map((menu) => (
                   <div key={menu.label} className="flex flex-col gap-1">
                     <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">

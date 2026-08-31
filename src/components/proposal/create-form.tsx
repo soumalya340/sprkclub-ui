@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
+import { CoverUpload } from "@/components/proposal/cover-upload";
 
 const schema = z.object({
   title: z.string().min(3, "Give it a name").max(80),
@@ -47,6 +49,7 @@ export function CreateProposalForm() {
   });
 
   const watch = form.watch();
+  const [cover, setCover] = useState<string | null>(null);
 
   if (!address) {
     return (
@@ -73,12 +76,20 @@ export function CreateProposalForm() {
             });
             return;
           }
-          const id = await createProposal(values);
+          const id = await createProposal({ ...values, cover: cover ?? undefined });
           if (!id) return;
           toast.success(`${values.title} has been created`);
           router.push(`/proposal/${id}`);
         })}
       >
+        <div className="grid gap-2">
+          <Label>Cover image</Label>
+          <CoverUpload value={cover} onChange={setCover} />
+          <p className="text-xs text-muted-foreground">
+            Optional — a stock cover is used if you skip this.
+          </p>
+        </div>
+
         <div className="grid gap-2">
           <Label htmlFor="title">Title</Label>
           <Input id="title" placeholder="Harbor Protocol" {...form.register("title")} />
@@ -146,7 +157,7 @@ export function CreateProposalForm() {
               <span>
                 <span className="block text-sm font-medium">Sprkclub Collab</span>
                 <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                  Creator withdraws after an operator validates a milestone.
+                  Creator withdraws after milestones clear the optimistic dispute window.
                 </span>
               </span>
             </label>
@@ -181,6 +192,12 @@ export function CreateProposalForm() {
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
           Preview
         </p>
+        {cover ? (
+          <div className="mt-3 aspect-[3/2] overflow-hidden rounded-lg border border-border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt="" className="size-full object-cover" />
+          </div>
+        ) : null}
         <h3 className="mt-3 font-display text-2xl leading-snug tracking-tight">
           {watch.title || "Untitled proposal"}
         </h3>
@@ -190,11 +207,11 @@ export function CreateProposalForm() {
         <dl className="mt-5 grid gap-3 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Price / NFT</dt>
-            <dd className="font-mono tabular-nums">{watch.pricePerNft || 0} USDC</dd>
+            <dd className="font-mono tabular-nums">{watch.pricePerNft || 0} MTK</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Goal</dt>
-            <dd className="font-mono tabular-nums">{watch.fundingGoal || 0} USDC</dd>
+            <dd className="font-mono tabular-nums">{watch.fundingGoal || 0} MTK</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Type</dt>
@@ -203,7 +220,7 @@ export function CreateProposalForm() {
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Stake to launch</dt>
             <dd className="font-mono tabular-nums">
-              {Math.round((Number(watch.fundingGoal) || 0) * 0.2)} USDC
+              {Math.round((Number(watch.fundingGoal) || 0) * 0.2)} MTK
             </dd>
           </div>
         </dl>

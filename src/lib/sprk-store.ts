@@ -62,11 +62,6 @@ export interface SprkState {
       milestoneIndex?: number;
     },
   ) => Promise<boolean>;
-  validateMilestone: (
-    proposalId: string,
-    milestoneId: string,
-    approve: boolean,
-  ) => Promise<boolean>;
 }
 
 export const useSprkStore = create<SprkState>()((set, get) => {
@@ -153,8 +148,6 @@ export const useSprkStore = create<SprkState>()((set, get) => {
     claimback: (proposalId) => act(proposalId, { action: "claimback" }),
     submitMilestone: (proposalId, input) =>
       act(proposalId, { action: "submit-milestone", ...input }),
-    validateMilestone: (proposalId, milestoneId, approve) =>
-      act(proposalId, { action: "review-milestone", milestoneId, approve }),
   };
 });
 

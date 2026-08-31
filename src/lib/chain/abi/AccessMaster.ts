@@ -1,4 +1,4 @@
-// Auto-exported from Foundry build output (deps/sprkclub-smartcontract/out/AccessMaster.sol/AccessMaster.json).
+// Auto-exported from Foundry build output (../sprkclub-smartcontract/out/AccessMaster.sol/AccessMaster.json).
 // Regenerate with: npm run abi:sync
 export const AccessMasterAbi = [
   {

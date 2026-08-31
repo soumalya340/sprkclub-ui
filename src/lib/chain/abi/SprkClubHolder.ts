@@ -1,4 +1,4 @@
-// Auto-exported from Foundry build output (deps/sprkclub-smartcontract/out/SprkClubHolder.sol/SprkClubHolder.json).
+// Auto-exported from Foundry build output (../sprkclub-smartcontract/out/SprkClubHolder.sol/SprkClubHolder.json).
 // Regenerate with: npm run abi:sync
 export const SprkClubHolderAbi = [
   {

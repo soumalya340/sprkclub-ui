@@ -6,9 +6,9 @@ import { SprkClubCollabAbi } from "@/lib/chain/abi/SprkClubCollab";
 import { activeChain } from "@/lib/chain/config";
 
 /**
- * Server-side chain writes for the proof trail. `submitMileStoneProof(bytes32)`
- * has an identical signature on SprkClubCollab and SprkClubHolder, so the Collab
- * ABI works against either address.
+ * Server-side chain writes for the proof / audit trail.
+ * Relayer signs `submitMileStoneProof` (creator key in practice today) and
+ * `recordAuditRoot` (must be the on-chain `relayer`). Dispute txs stay in the wallet.
  */
 
 export const publicClient = createPublicClient({
@@ -75,4 +75,76 @@ export async function readMilestoneProofs(
     }
   }
   return roots;
+}
+
+/**
+ * Records the 0G Compute scorecard Merkle root and starts the 7-day dispute window.
+ * Must be signed by the on-chain `relayer`.
+ */
+export async function recordAuditRoot(
+  proposalAddr: Address,
+  milestoneIndex: number,
+  rootHash: `0x${string}`,
+): Promise<`0x${string}`> {
+  const account = getAccount();
+  const wallet = createWalletClient({
+    account,
+    chain: activeChain,
+    transport: http(),
+  });
+
+  const { request } = await publicClient.simulateContract({
+    account,
+    address: proposalAddr,
+    abi: SprkClubCollabAbi,
+    functionName: "recordAuditRoot",
+    args: [BigInt(milestoneIndex), rootHash],
+  });
+
+  return wallet.writeContract(request);
+}
+
+export type OnChainMilestoneView = {
+  status: number;
+  auditRootHash: `0x${string}`;
+  auditRecordedAt: bigint;
+  disputeBond: bigint;
+};
+
+export async function readMilestoneAudit(
+  proposalAddr: Address,
+  milestoneIndex: number,
+): Promise<OnChainMilestoneView> {
+  const [status, auditRootHash, auditRecordedAt, disputeBond] = await Promise.all([
+    publicClient.readContract({
+      address: proposalAddr,
+      abi: SprkClubCollabAbi,
+      functionName: "milestoneStatus",
+      args: [BigInt(milestoneIndex)],
+    }),
+    publicClient.readContract({
+      address: proposalAddr,
+      abi: SprkClubCollabAbi,
+      functionName: "auditRootHash",
+      args: [BigInt(milestoneIndex)],
+    }),
+    publicClient.readContract({
+      address: proposalAddr,
+      abi: SprkClubCollabAbi,
+      functionName: "auditRecordedAt",
+      args: [BigInt(milestoneIndex)],
+    }),
+    publicClient.readContract({
+      address: proposalAddr,
+      abi: SprkClubCollabAbi,
+      functionName: "disputeBond",
+    }),
+  ]);
+
+  return {
+    status: Number(status),
+    auditRootHash: auditRootHash as `0x${string}`,
+    auditRecordedAt: auditRecordedAt as bigint,
+    disputeBond: disputeBond as bigint,
+  };
 }

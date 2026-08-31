@@ -7,7 +7,7 @@ import {
   ExternalLink,
   LayoutDashboard,
   LogOut,
-  ShieldCheck,
+  Rocket,
   TriangleAlert,
   Wallet,
 } from "lucide-react";
@@ -23,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { activeChain, explorerAddress } from "@/lib/chain/config";
-import { useIsVerifier } from "@/lib/chain/hooks";
 import { truncateAddress } from "@/lib/format";
 import { useSprkStore } from "@/lib/sprk-store";
 
@@ -33,7 +32,6 @@ import { useSprkStore } from "@/lib/sprk-store";
  */
 export function ConnectWallet({ compact = false }: { compact?: boolean }) {
   const { disconnect } = useDisconnect();
-  const { isVerifier } = useIsVerifier();
   const proposals = useSprkStore((s) => s.proposals);
 
   return (
@@ -83,6 +81,9 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
         const startedCount = proposals.filter(
           (p) => p.creator.toLowerCase() === addr,
         ).length;
+        const readyToLaunchCount = proposals.filter(
+          (p) => p.creator.toLowerCase() === addr && p.status === "passed",
+        ).length;
 
         return (
           <DropdownMenu>
@@ -104,12 +105,6 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
                   <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
                     {chain.name}
                   </span>
-                  {isVerifier ? (
-                    <span className="flex items-center gap-1 text-xs text-success">
-                      <ShieldCheck className="size-3.5" aria-hidden />
-                      Verifier
-                    </span>
-                  ) : null}
                 </DropdownMenuLabel>
                 <p className="mt-1.5 font-mono text-sm tabular-nums tracking-tight text-foreground">
                   {truncateAddress(account.address, 6)}
@@ -138,6 +133,19 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
                   </span>
                 </Link>
               </DropdownMenuItem>
+              {readyToLaunchCount > 0 ? (
+                <DropdownMenuItem asChild className="justify-between gap-3">
+                  <Link href="/dashboard/started-events#ready-to-launch">
+                    <span className="flex items-center gap-2">
+                      <Rocket className="size-3.5" aria-hidden />
+                      Convert proposal
+                    </span>
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                      {readyToLaunchCount}
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
 
               <DropdownMenuSeparator className="my-1.5" />
 

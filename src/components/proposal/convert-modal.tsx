@@ -15,16 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatAmount, isPassed, stakeAmount } from "@/lib/format";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
-import type { Proposal, Stablecoin } from "@/lib/types";
+import type { Proposal } from "@/lib/types";
 
 function isoOffset(days: number): string {
   const d = new Date();
@@ -43,7 +36,6 @@ export function ConvertModal({
   const address = useAddress();
   const convertProposal = useSprkStore((s) => s.convertProposal);
   const [open, setOpen] = useState(false);
-  const [stablecoin, setStablecoin] = useState<Stablecoin>(proposal.stablecoin);
   const [startDate, setStartDate] = useState(isoOffset(0));
   const [endDate, setEndDate] = useState(isoOffset(30));
 
@@ -60,27 +52,11 @@ export function ConvertModal({
           <DialogTitle>Launch crowdfunding</DialogTitle>
           <DialogDescription>
             Convert {proposal.title} into a live sale. You will stake{" "}
-            {formatAmount(stakeAmount(proposal), stablecoin)} (20% of the goal)
+            {formatAmount(stakeAmount(proposal), "MTK")} (20% of the goal)
             before minting opens.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>Stablecoin</Label>
-            <Select
-              value={stablecoin}
-              onValueChange={(v) => setStablecoin(v as Stablecoin)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USDC">USDC</SelectItem>
-                <SelectItem value="USDT">USDT</SelectItem>
-                <SelectItem value="MATIC">MATIC</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="startDate">Starting date</Label>
@@ -110,7 +86,7 @@ export function ConvertModal({
                 return;
               }
               const ok = await convertProposal(proposal.id, {
-                stablecoin,
+                stablecoin: "MTK",
                 startDate,
                 endDate,
               });

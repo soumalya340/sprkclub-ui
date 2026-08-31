@@ -6,7 +6,6 @@ import {
   getProposal,
   norm,
   recordMint,
-  reviewMilestone,
   setStaked,
   setStatus,
   setWithdrawn,
@@ -125,17 +124,6 @@ export async function POST(
           chainTxHash,
           milestoneIndex,
         });
-        break;
-      }
-
-      case "review-milestone": {
-        // The authoritative gate is on-chain: SprkClub's validate() requires the
-        // AgenticVerifier NFT. This records the operator's decision off-chain.
-        const { milestoneId, approve } = body;
-        if (typeof milestoneId !== "string") {
-          return NextResponse.json({ error: "milestoneId is required" }, { status: 400 });
-        }
-        await reviewMilestone(id, milestoneId, Boolean(approve), address);
         break;
       }
 

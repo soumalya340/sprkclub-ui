@@ -57,7 +57,7 @@ export default function Home() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg">
-            <Link href="/launch/create-proposal">
+            <Link href="/launch">
               Create a proposal <ArrowRight />
             </Link>
           </Button>
@@ -83,8 +83,8 @@ export default function Home() {
               Raised
             </dt>
             <dd className="mt-1 font-display text-3xl tabular-nums">
-              {formatAmount(raised, "USDC").replace(" USDC", "")}
-              <span className="ml-1 text-base text-muted-foreground">USDC</span>
+              {formatAmount(raised, "MTK").replace(" MTK", "")}
+              <span className="ml-1 text-base text-muted-foreground">MTK</span>
             </dd>
           </div>
         </dl>

@@ -56,9 +56,11 @@ export function VotePanel({ proposal }: { proposal: Proposal }) {
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
         <div className="h-full bg-primary" style={{ width: `${share}%` }} />
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">
-        55% support converts this into a crowdfunding event.
-      </p>
+      {share < 55 ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          55% support converts this into a crowdfunding event.
+        </p>
+      ) : null}
       {!address ? (
         <div className="mt-5">
           <ConnectWallet />

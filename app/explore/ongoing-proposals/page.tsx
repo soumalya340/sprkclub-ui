@@ -8,9 +8,7 @@ import { useSprkStore } from "@/lib/sprk-store";
 
 export default function OngoingPage() {
   const proposals = useSprkStore((s) => s.proposals);
-  const list = proposals.filter((p) =>
-    ["voting", "passed", "rejected"].includes(p.status),
-  );
+  const list = proposals.filter((p) => p.status === "voting");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -20,7 +18,7 @@ export default function OngoingPage() {
         description="The club is still voting. Support the ones you want funded."
         action={
           <Button asChild>
-            <Link href="/launch/create-proposal">Create proposal</Link>
+            <Link href="/launch">Create proposal</Link>
           </Button>
         }
       />

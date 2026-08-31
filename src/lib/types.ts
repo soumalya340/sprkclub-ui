@@ -1,5 +1,6 @@
 export type ProposalType = "collab" | "holder";
-export type Stablecoin = "USDT" | "USDC" | "MATIC";
+/** MTK is the only unit the app uses — 1 MTK == 1 unit of price/goal/stake everywhere. */
+export type Stablecoin = "MTK";
 export type VoteKind = "like" | "dislike";
 
 export type ProposalStatus =
@@ -63,6 +64,8 @@ export interface Proposal {
 export interface CreateProposalInput {
   title: string;
   description: string;
+  /** Uploaded cover image URL (Vercel Blob). Falls back to a stock cover when omitted. */
+  cover?: string;
   pricePerNft: number;
   fundingGoal: number;
   type: ProposalType;
