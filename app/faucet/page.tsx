@@ -3,7 +3,7 @@
 import { Droplets, ExternalLink, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { formatEther, formatUnits, parseEther } from "viem";
+import { formatUnits, parseEther } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
@@ -12,12 +12,13 @@ import { MyTokenAbi } from "@/lib/chain/abi/MyToken";
 import { activeChain, contracts, explorerAddress, explorerTx, isDeployed } from "@/lib/chain/config";
 import { truncateAddress } from "@/lib/format";
 
-/** SprkToken mints `msg.value * 100` tokens. 0.01 0G → 1 token unit * 100 = 1e18 * 1 if 18 decimals. */
+/** Payable mint: send this much native 0G → receive 100× in SprkCoin. */
 const FAUCET_VALUE = "0.01";
+const FAUCET_STABLE = Number(FAUCET_VALUE) * 100;
 
 /**
- * SprkToken.mint() is payable: send native 0G, receive 100× that amount in
- * stable units. Used for stakes, ticket mints, and dispute bonds on Galileo.
+ * Testnet faucet for SprkCoin (SPRK), the mock stable used in stakes, ticket
+ * mints, and dispute bonds.
  */
 export default function FaucetPage() {
   const { address, isConnected, chainId } = useAccount();
@@ -45,7 +46,6 @@ export default function FaucetPage() {
 
   const busy = isPending || confirming;
   const wrongChain = isConnected && chainId !== activeChain.id;
-  const expectedTokens = Number(FAUCET_VALUE) * 100;
 
   async function claim() {
     try {
@@ -56,10 +56,10 @@ export default function FaucetPage() {
         value: parseEther(FAUCET_VALUE),
       });
       setTxHash(hash);
-      toast.success(`Minted ~${expectedTokens} stable (sent ${FAUCET_VALUE} 0G)`);
+      toast.success(`Claimed ${FAUCET_STABLE} SPRK`);
       setTimeout(() => refetchBalance(), 4000);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Mint failed";
+      const message = error instanceof Error ? error.message : "Claim failed";
       toast.error(message);
     }
   }
@@ -81,13 +81,13 @@ export default function FaucetPage() {
       <PageHeader
         kicker="0G testnet"
         title="Faucet"
-        description="Mint the mock stablecoin used for stakes, ticket mints, and dispute bonds on 0G Galileo."
+        description="Claim SprkCoin for stakes, ticket mints, and dispute bonds on Galileo."
       />
 
       <div className="mt-10 rounded-xl border border-border bg-card p-6 sm:p-8">
         {!address ? (
           <>
-            <p className="text-sm text-muted-foreground">Connect a wallet to claim stablecoin.</p>
+            <p className="text-sm text-muted-foreground">Connect a wallet to claim SprkCoin.</p>
             <div className="mt-4">
               <ConnectWallet />
             </div>
@@ -95,7 +95,7 @@ export default function FaucetPage() {
         ) : wrongChain ? (
           <>
             <p className="text-sm text-muted-foreground">
-              Switch to {activeChain.name} to mint.
+              Switch to {activeChain.name} to claim SprkCoin.
             </p>
             <div className="mt-4">
               <ConnectWallet />
@@ -112,7 +112,7 @@ export default function FaucetPage() {
                   {typeof balance === "bigint" && typeof decimals === "number"
                     ? Number(formatUnits(balance, decimals)).toLocaleString()
                     : "—"}{" "}
-                  <span className="text-lg text-muted-foreground">stable</span>
+                  <span className="text-lg text-muted-foreground">SPRK</span>
                 </p>
                 <p className="mt-1 font-mono text-xs text-muted-foreground">
                   {truncateAddress(address, 6)}
@@ -120,7 +120,7 @@ export default function FaucetPage() {
               </div>
               <Button onClick={claim} disabled={busy}>
                 {busy ? <Loader2 className="animate-spin" /> : <Droplets />}
-                {busy ? "Minting…" : `Claim (~${expectedTokens} for ${FAUCET_VALUE} 0G)`}
+                {busy ? "Claiming…" : "Claim SPRK"}
               </Button>
             </div>
 
@@ -139,9 +139,8 @@ export default function FaucetPage() {
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-        SprkToken <code>mint()</code> is payable: you send native 0G and receive{" "}
-        <code>msg.value × 100</code> stable units (
-        {formatEther(parseEther(FAUCET_VALUE))} 0G → ~{expectedTokens} tokens). Token:{" "}
+        Each claim sends {FAUCET_VALUE} 0G and credits about {FAUCET_STABLE} SprkCoin. Token
+        contract on{" "}
         <a
           href={explorerAddress(contracts.stablecoin)}
           target="_blank"

@@ -1,6 +1,6 @@
 export type ProposalType = "collab" | "holder";
-/** MTK is the only unit the app uses — 1 MTK == 1 unit of price/goal/stake everywhere. */
-export type Stablecoin = "MTK";
+/** SPRK is the only unit the app uses — 1 SPRK == 1 unit of price/goal/stake everywhere. */
+export type Stablecoin = "SPRK";
 export type VoteKind = "like" | "dislike";
 
 export type ProposalStatus =

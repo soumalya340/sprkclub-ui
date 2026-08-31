@@ -75,8 +75,8 @@ export function DisputePanel({
 
   const bondLabel =
     challengeTx.bond !== undefined
-      ? `${formatUnits(challengeTx.bond, 18)} stable`
-      : "10 stable";
+      ? `${formatUnits(challengeTx.bond, 18)} SPRK`
+      : "10 SPRK";
 
   if (
     dispute.status === undefined ||

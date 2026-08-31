@@ -7,7 +7,7 @@ export function truncateAddress(address: string, size = 4): string {
   return `${address.slice(0, size + 2)}…${address.slice(-size)}`;
 }
 
-export function formatAmount(value: number, coin: Stablecoin = "MTK"): string {
+export function formatAmount(value: number, coin: Stablecoin = "SPRK"): string {
   const formatted = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: value % 1 === 0 ? 0 : 2,
   }).format(value);

@@ -52,7 +52,7 @@ export function ConvertModal({
           <DialogTitle>Launch crowdfunding</DialogTitle>
           <DialogDescription>
             Convert {proposal.title} into a live sale. You will stake{" "}
-            {formatAmount(stakeAmount(proposal), "MTK")} (20% of the goal)
+            {formatAmount(stakeAmount(proposal), "SPRK")} (20% of the goal)
             before minting opens.
           </DialogDescription>
         </DialogHeader>
@@ -86,7 +86,7 @@ export function ConvertModal({
                 return;
               }
               const ok = await convertProposal(proposal.id, {
-                stablecoin: "MTK",
+                stablecoin: "SPRK",
                 startDate,
                 endDate,
               });

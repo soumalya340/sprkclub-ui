@@ -164,7 +164,7 @@ export async function createProposal(
     creator: norm(creator),
     createdAt: Date.now(),
     status: "voting",
-    stablecoin: "MTK",
+    stablecoin: "SPRK",
   });
 
   return (await getProposal(id))!;

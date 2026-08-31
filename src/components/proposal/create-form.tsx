@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
@@ -20,7 +19,6 @@ const schema = z.object({
   description: z.string().min(20, "Tell people what you are making").max(600),
   pricePerNft: z.number().positive("Must be above zero"),
   fundingGoal: z.number().positive("Must be above zero"),
-  type: z.enum(["collab", "holder"]),
   validTill: z.string().min(1, "Pick a date"),
 });
 
@@ -43,7 +41,6 @@ export function CreateProposalForm() {
       description: "",
       pricePerNft: 25,
       fundingGoal: 4000,
-      type: "collab",
       validTill: defaultValidTill(),
     },
   });
@@ -76,7 +73,11 @@ export function CreateProposalForm() {
             });
             return;
           }
-          const id = await createProposal({ ...values, cover: cover ?? undefined });
+          const id = await createProposal({
+            ...values,
+            type: "collab",
+            cover: cover ?? undefined,
+          });
           if (!id) return;
           toast.success(`${values.title} has been created`);
           router.push(`/proposal/${id}`);
@@ -145,34 +146,6 @@ export function CreateProposalForm() {
           </div>
         </div>
 
-        <fieldset className="grid gap-3">
-          <legend className="text-sm font-medium">Proposal type</legend>
-          <RadioGroup
-            value={watch.type}
-            onValueChange={(v) => form.setValue("type", v as Values["type"])}
-            className="grid gap-3 sm:grid-cols-2"
-          >
-            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-secondary p-4 has-[[data-state=checked]]:border-primary">
-              <RadioGroupItem value="collab" className="mt-0.5" />
-              <span>
-                <span className="block text-sm font-medium">Sprkclub Collab</span>
-                <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                  Creator withdraws after milestones clear the optimistic dispute window.
-                </span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-secondary p-4 has-[[data-state=checked]]:border-primary">
-              <RadioGroupItem value="holder" className="mt-0.5" />
-              <span>
-                <span className="block text-sm font-medium">Sprkclub Holder</span>
-                <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                  NFT holders share later yield from the work.
-                </span>
-              </span>
-            </label>
-          </RadioGroup>
-        </fieldset>
-
         <div className="grid gap-2">
           <Label htmlFor="validTill">Valid till</Label>
           <Input id="validTill" type="date" {...form.register("validTill")} />
@@ -207,20 +180,20 @@ export function CreateProposalForm() {
         <dl className="mt-5 grid gap-3 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Price / NFT</dt>
-            <dd className="font-mono tabular-nums">{watch.pricePerNft || 0} MTK</dd>
+            <dd className="font-mono tabular-nums">{watch.pricePerNft || 0} SPRK</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Goal</dt>
-            <dd className="font-mono tabular-nums">{watch.fundingGoal || 0} MTK</dd>
+            <dd className="font-mono tabular-nums">{watch.fundingGoal || 0} SPRK</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Type</dt>
-            <dd>{watch.type === "holder" ? "Holder" : "Collab"}</dd>
+            <dd>Sprkclub Collab</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Stake to launch</dt>
             <dd className="font-mono tabular-nums">
-              {Math.round((Number(watch.fundingGoal) || 0) * 0.2)} MTK
+              {Math.round((Number(watch.fundingGoal) || 0) * 0.2)} SPRK
             </dd>
           </div>
         </dl>

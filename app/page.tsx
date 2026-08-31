@@ -83,8 +83,8 @@ export default function Home() {
               Raised
             </dt>
             <dd className="mt-1 font-display text-3xl tabular-nums">
-              {formatAmount(raised, "MTK").replace(" MTK", "")}
-              <span className="ml-1 text-base text-muted-foreground">MTK</span>
+              {formatAmount(raised, "SPRK").replace(" SPRK", "")}
+              <span className="ml-1 text-base text-muted-foreground">SPRK</span>
             </dd>
           </div>
         </dl>

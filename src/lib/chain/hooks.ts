@@ -255,7 +255,7 @@ function useTxHelpers() {
   return { writeContractAsync, hash, isPending, error, receipt };
 }
 
-/** Approve stable + challenge(milestoneIndex). */
+/** Approve SprkCoin + challenge(milestoneIndex). */
 export function useChallenge(collab: Address | undefined, milestoneIndex = 0) {
   const { writeContractAsync, hash, isPending, error, receipt } = useTxHelpers();
   const { data: bond } = useReadContract({
