@@ -117,16 +117,16 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
                 Dashboard
               </DropdownMenuLabel>
               <DropdownMenuItem asChild className="justify-between gap-3">
-                <Link href="/dashboard/crowdfunding-events">
-                  <span>Backed events</span>
+                <Link href="/dashboard/campaigns">
+                  <span>Backed campaigns</span>
                   <span className="font-mono text-xs tabular-nums text-muted-foreground">
                     {backedCount}
                   </span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="justify-between gap-3">
-                <Link href="/dashboard/started-events">
-                  <span>Started events</span>
+                <Link href="/dashboard/started-campaigns">
+                  <span>Started campaigns</span>
                   <span className="font-mono text-xs tabular-nums text-muted-foreground">
                     {startedCount}
                   </span>
@@ -134,7 +134,7 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
               </DropdownMenuItem>
               {readyToLaunchCount > 0 ? (
                 <DropdownMenuItem asChild className="justify-between gap-3">
-                  <Link href="/dashboard/started-events#ready-to-launch">
+                  <Link href="/dashboard/started-campaigns#ready-to-launch">
                     <span className="flex items-center gap-2">
                       <Rocket className="size-3.5" aria-hidden />
                       Convert proposal

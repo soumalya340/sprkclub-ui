@@ -96,7 +96,7 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
         ) : (
           <p className="text-sm text-muted-foreground">
             {proposal.type === "holder"
-              ? "Holder events share later yield with NFT owners after delivery."
+              ? "Holder campaigns share later yield with NFT owners after delivery."
               : "Creator can withdraw the next tranche after a milestone is finalized (or Alice wins a challenge)."}
           </p>
         )
@@ -111,8 +111,8 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
             <DialogHeader>
               <DialogTitle>Open a dispute</DialogTitle>
               <DialogDescription>
-                Pause this event and allow backers to claim refunds. Use this if the
-                work is not being delivered.
+                Pause this campaign and allow backers to claim refunds. Use this if
+                the work is not being delivered.
               </DialogDescription>
             </DialogHeader>
             <Textarea

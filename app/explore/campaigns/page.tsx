@@ -14,11 +14,11 @@ export default function CrowdfundingListPage() {
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <PageHeader
         kicker="Explore"
-        title="Crowdfunding events"
+        title="Campaigns"
         description="Live sales, deliveries in progress, and closed rounds. Stake is always 20% of the goal."
       />
       {list.length === 0 ? (
-        <p className="mt-10 text-sm text-muted-foreground">No crowdfunding events yet.</p>
+        <p className="mt-10 text-sm text-muted-foreground">No campaigns yet.</p>
       ) : (
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((p) => (

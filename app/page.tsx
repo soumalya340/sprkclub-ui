@@ -22,7 +22,7 @@ const steps = [
     n: "02",
     title: "Vote",
     location: "ON-CHAIN",
-    body: "Members signal support. Fifty-five percent converts a proposal into a live crowdfunding event.",
+    body: "Members signal support. Fifty-five percent converts a proposal into a live campaign.",
   },
   {
     n: "03",
@@ -75,7 +75,7 @@ export default function Home() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/explore/crowdfunding-events">Explore events</Link>
+              <Link href="/explore/campaigns">Explore campaigns</Link>
             </Button>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function Home() {
           </div>
           <div>
             <dt className="text-xs uppercase tracking-[0.16em] text-sand-1100">
-              Live events
+              Live campaigns
             </dt>
             <dd className="mt-1 font-display text-3xl tabular-nums">{live}</dd>
           </div>

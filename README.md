@@ -39,12 +39,12 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/` | Home |
 | `/launch` | Create proposal |
 | `/explore/ongoing-proposals` | Voting proposals |
-| `/explore/crowdfunding-events` | Crowdfunding list |
-| `/explore/crowdfunding-events/[id]` | Event detail + milestone escrow |
-| `/dashboard/crowdfunding-events` | Backed events |
-| `/dashboard/started-events` | Started events + milestone escrow |
+| `/explore/campaigns` | Campaigns list |
+| `/explore/campaigns/[id]` | Campaign detail + milestone escrow |
+| `/dashboard/campaigns` | Backed campaigns |
+| `/dashboard/started-campaigns` | Started campaigns + milestone escrow |
 | `/proposal/[id]` | Proposal detail |
-| `/faucet` | Testnet stable faucet helper |
+| `/join` | Join The Movement — claim testnet SPRK |
 
 UI components live under `src/components`; shared lib under `src/lib`.
 
@@ -218,7 +218,7 @@ pnpm dev   # start yourself — do not expect agents to boot servers
 
 Then:
 
-1. Open a crowdfunding event / started-events dashboard on 0G Galileo.
+1. Open a campaign / started-campaigns dashboard on 0G Galileo.
 2. As creator, submit a milestone proof — Storage root + on-chain proof.
 3. AI audit runs (Compute or Fallback Mode) and `recordAuditRoot` starts the window.
 4. Challenge with bond, vote with tickets, or finalize after 7 days.

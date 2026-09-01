@@ -58,7 +58,7 @@ export function VotePanel({ proposal }: { proposal: Proposal }) {
       </div>
       {share < 55 ? (
         <p className="mt-3 text-xs text-muted-foreground">
-          55% support converts this into a crowdfunding event.
+          55% support converts this into a campaign.
         </p>
       ) : null}
       {!address ? (

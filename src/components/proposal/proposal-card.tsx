@@ -71,7 +71,7 @@ export function ProposalCard({
 
   if (toEvent) {
     return (
-      <Link href={`/explore/crowdfunding-events/${proposal.id}`} className={className}>
+      <Link href={`/explore/campaigns/${proposal.id}`} className={className}>
         {inner}
       </Link>
     );

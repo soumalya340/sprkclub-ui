@@ -20,12 +20,12 @@ export default function DashboardBackedPage() {
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <PageHeader
         kicker="Dashboard"
-        title="Backed events"
-        description="Crowdfunding rounds you minted into. Dispute or claim back from here if delivery stalls."
+        title="Backed campaigns"
+        description="Campaigns you minted into. Dispute or claim back from here if delivery stalls."
       />
       {!address ? (
         <div className="mt-10 rounded-xl border border-border bg-card p-8">
-          <p className="text-sm text-muted-foreground">Connect to see events you backed.</p>
+          <p className="text-sm text-muted-foreground">Connect to see campaigns you backed.</p>
           <div className="mt-4">
             <ConnectWallet />
           </div>
@@ -34,10 +34,10 @@ export default function DashboardBackedPage() {
         <div className="mt-10 rounded-xl border border-border bg-card p-10 text-center">
           <p className="font-display text-2xl">No tickets yet</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Mint an NFT on a live event, or switch to the Backer wallet to see a seeded position.
+            Mint an NFT on a live campaign, or switch to the Backer wallet to see a seeded position.
           </p>
           <Button asChild className="mt-6">
-            <Link href="/explore/crowdfunding-events">Browse events</Link>
+            <Link href="/explore/campaigns">Browse campaigns</Link>
           </Button>
         </div>
       ) : (

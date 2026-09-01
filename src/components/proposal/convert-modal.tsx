@@ -45,11 +45,11 @@ export function ConvertModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button disabled={!canLaunch}>Launch crowdfunding</Button>}
+        {trigger ?? <Button disabled={!canLaunch}>Launch campaign</Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Launch crowdfunding</DialogTitle>
+          <DialogTitle>Launch campaign</DialogTitle>
           <DialogDescription>
             Convert {proposal.title} into a live sale. You will stake{" "}
             {formatAmount(stakeAmount(proposal), "SPRK")} (20% of the goal)
@@ -93,10 +93,10 @@ export function ConvertModal({
               if (!ok) return;
               toast.success("Proposal converted");
               setOpen(false);
-              router.push(`/explore/crowdfunding-events/${proposal.id}`);
+              router.push(`/explore/campaigns/${proposal.id}`);
             }}
           >
-            Launch crowdfunding
+            Launch campaign
           </Button>
         </DialogFooter>
       </DialogContent>

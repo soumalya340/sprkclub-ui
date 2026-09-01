@@ -17,10 +17,10 @@ const FAUCET_VALUE = "0.01";
 const FAUCET_STABLE = Number(FAUCET_VALUE) * 100;
 
 /**
- * Testnet faucet for SprkCoin (SPRK), the mock stable used in stakes, ticket
+ * Claim SprkCoin (SPRK) on testnet — the mock stable used in stakes, ticket
  * mints, and dispute bonds.
  */
-export default function FaucetPage() {
+export default function JoinPage() {
   const { address, isConnected, chainId } = useAccount();
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const { writeContractAsync, isPending } = useWriteContract();
@@ -69,7 +69,7 @@ export default function FaucetPage() {
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <PageHeader
           kicker="0G"
-          title="Faucet"
+          title="Join The Movement"
           description={`No contracts are deployed on ${activeChain.name} yet.`}
         />
       </div>
@@ -80,8 +80,8 @@ export default function FaucetPage() {
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <PageHeader
         kicker="0G testnet"
-        title="Faucet"
-        description="Claim SprkCoin for stakes, ticket mints, and dispute bonds on Galileo."
+        title="Join The Movement"
+        description="Claim SprkCoin to stake, mint tickets, and back campaigns on Galileo."
       />
 
       <div className="mt-10 rounded-xl border border-border bg-card p-6 sm:p-8">

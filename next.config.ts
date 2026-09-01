@@ -14,6 +14,40 @@ const nextConfig: NextConfig = {
       "@x402/svm/exact/client": x402Stub,
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/explore/crowdfunding-events",
+        destination: "/explore/campaigns",
+        permanent: true,
+      },
+      {
+        source: "/explore/crowdfunding-events/:id",
+        destination: "/explore/campaigns/:id",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/crowdfunding-events",
+        destination: "/dashboard/campaigns",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/started-events",
+        destination: "/dashboard/started-campaigns",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/started-events/:path*",
+        destination: "/dashboard/started-campaigns/:path*",
+        permanent: true,
+      },
+      {
+        source: "/faucet",
+        destination: "/join",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

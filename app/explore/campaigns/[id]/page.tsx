@@ -24,9 +24,9 @@ export default function CrowdfundingDetailPage() {
   if (!proposal) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="font-display text-3xl">Event not found</p>
+        <p className="font-display text-3xl">Campaign not found</p>
         <Button asChild className="mt-6" variant="outline">
-          <Link href="/explore/crowdfunding-events">Back to events</Link>
+          <Link href="/explore/campaigns">Back to campaigns</Link>
         </Button>
       </div>
     );

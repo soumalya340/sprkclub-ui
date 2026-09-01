@@ -119,8 +119,8 @@ export default function ProposalDetailPage() {
           ) : null}
           {live ? (
             <Button asChild variant="outline">
-              <Link href={`/explore/crowdfunding-events/${proposal.id}`}>
-                Open crowdfunding event
+              <Link href={`/explore/campaigns/${proposal.id}`}>
+                Open campaign
               </Link>
             </Button>
           ) : null}

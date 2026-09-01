@@ -27,7 +27,7 @@ const menus = [
     label: "Explore",
     items: [
       { href: "/explore/ongoing-proposals", label: "Ongoing proposals" },
-      { href: "/explore/crowdfunding-events", label: "Crowdfunding events" },
+      { href: "/explore/campaigns", label: "Campaigns" },
     ],
   },
 ] as const;
@@ -71,7 +71,7 @@ export function Nav() {
             variant="ghost"
             className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
           >
-            <Link href="/faucet">Faucet</Link>
+            <Link href="/join">Join The Movement</Link>
           </Button>
           {menus.map((menu) => (
             <DropdownMenu key={menu.label}>
@@ -122,11 +122,11 @@ export function Nav() {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    href="/faucet"
+                    href="/join"
                     className="rounded-md text-base font-medium text-foreground"
                     onClick={() => setOpen(false)}
                   >
-                    Faucet
+                    Join The Movement
                   </Link>
                 </SheetClose>
                 {menus.map((menu) => (

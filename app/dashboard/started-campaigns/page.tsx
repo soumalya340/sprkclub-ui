@@ -27,13 +27,13 @@ export default function DashboardStartedPage() {
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <PageHeader
         kicker="Dashboard"
-        title="Started events"
+        title="Started campaigns"
         description="Campaigns you created — stake, submit proofs, run AI audit, then finalize or face challenges."
       />
 
       {!address ? (
         <div className="mt-10 rounded-xl border border-border bg-card p-8">
-          <p className="text-sm text-muted-foreground">Connect to see events you started.</p>
+          <p className="text-sm text-muted-foreground">Connect to see campaigns you started.</p>
           <div className="mt-4">
             <ConnectWallet />
           </div>
@@ -68,8 +68,8 @@ export default function DashboardStartedPage() {
             <section id="ready-to-launch" className="mt-16 scroll-mt-24 border-t border-border pt-10">
               <h2 className="font-display text-3xl tracking-tight">Ready to launch</h2>
               <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                Convert into a crowdfunding event and stake 20% of the goal to
-                open minting.
+                Convert into a campaign and stake 20% of the goal to open
+                minting.
               </p>
               <div className="mt-6 flex flex-col gap-4">
                 {readyToLaunch.map((p) => (
@@ -108,10 +108,10 @@ export default function DashboardStartedPage() {
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <h3 className="font-display text-2xl tracking-tight">{p.title}</h3>
                       <Link
-                        href={`/explore/crowdfunding-events/${p.id}`}
+                        href={`/explore/campaigns/${p.id}`}
                         className="text-sm text-muted-foreground underline-offset-4 hover:underline"
                       >
-                        Open event
+                        Open campaign
                       </Link>
                     </div>
                     <div className="mt-4">
