@@ -7,7 +7,7 @@ export const PROPOSAL_VOTE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 export const DISCARDED_VISIBLE_MS = 24 * 60 * 60 * 1000;
 
 /** Wallet must hold more than this many SPRK to cast a vote. */
-export const MIN_SPRK_TO_VOTE = 10;
+export const MIN_SPRK_TO_VOTE = 1;
 
 export function proposalExpiresAt(createdAt: number): number {
   return createdAt + PROPOSAL_VOTE_WINDOW_MS;

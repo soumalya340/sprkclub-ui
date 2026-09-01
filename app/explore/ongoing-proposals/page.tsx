@@ -18,7 +18,7 @@ export default function OngoingPage() {
       <PageHeader
         kicker="Explore"
         title="Ongoing proposals"
-        description="The club is still voting. Ideas stay open for one month — hold more than 10 SPRK to vote."
+        description="The club is still voting. Ideas stay open for one month — hold more than 1 SPRK to vote."
         action={
           <Button asChild>
             <Link href="/launch">Create proposal</Link>

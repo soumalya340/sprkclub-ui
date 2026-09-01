@@ -507,7 +507,7 @@ export function CreateProposalForm() {
                     <span className="font-mono font-medium text-[#1A1814]">
                       {discardDate}
                     </span>
-                    . After that they’re discarded. Voters need more than 10 SPRK.
+                    . After that they’re discarded. Voters need more than 1 SPRK.
                   </p>
                 </div>
               </div>

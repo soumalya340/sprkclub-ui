@@ -1,27 +1,44 @@
 "use client";
 
 import { Droplets, ExternalLink, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { formatUnits, parseEther } from "viem";
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useBalance,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MyTokenAbi } from "@/lib/chain/abi/MyToken";
 import { activeChain, contracts, explorerAddress, explorerTx, isDeployed } from "@/lib/chain/config";
 import { truncateAddress } from "@/lib/format";
 
-/** Payable mint: send this much native 0G → receive 100× in SprkCoin. */
-const FAUCET_VALUE = "0.01";
-const FAUCET_STABLE = Number(FAUCET_VALUE) * 100;
+/** Contract rate: 1 native 0G minted → 100 SprkCoin (SprkCoin.sol `mint()`: `_mint(msg.sender, msg.value * 100)`). */
+const MINT_RATE = 100;
+const QUICK_AMOUNTS = ["0.01", "0.1", "1"];
+
+/** Loosely validate a decimal string is a positive, parseable amount before it hits parseEther. */
+function parseAmount(raw: string): number | null {
+  if (!/^\d*\.?\d*$/.test(raw) || raw === "" || raw === ".") return null;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return value;
+}
 
 /**
  * Claim SprkCoin (SPRK) on testnet — the mock stable used in stakes, ticket
- * mints, and dispute bonds.
+ * mints, and dispute bonds. Rate is fixed by the contract at 100 SPRK per 0G.
  */
 export default function JoinPage() {
+  const inputId = useId();
   const { address, isConnected, chainId } = useAccount();
+  const [amount, setAmount] = useState("0.01");
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const { writeContractAsync, isPending } = useWriteContract();
   const { isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
@@ -44,23 +61,44 @@ export default function JoinPage() {
     query: { enabled: isDeployed && Boolean(address) },
   });
 
+  const { data: nativeBalance, refetch: refetchNative } = useBalance({
+    address,
+    query: { enabled: Boolean(address) },
+  });
+
   const busy = isPending || confirming;
   const wrongChain = isConnected && chainId !== activeChain.id;
 
+  const parsedAmount = useMemo(() => parseAmount(amount), [amount]);
+  const insufficientNative =
+    parsedAmount !== null && nativeBalance ? parseEther(amount) > nativeBalance.value : false;
+  const amountError =
+    amount.length > 0 && parsedAmount === null
+      ? "Enter a valid amount, e.g. 0.05"
+      : insufficientNative
+        ? `You only have ${Number(formatUnits(nativeBalance!.value, 18)).toLocaleString()} 0G`
+        : null;
+  const canClaim = parsedAmount !== null && !insufficientNative && !busy;
+  const sprkPreview = parsedAmount !== null ? parsedAmount * MINT_RATE : 0;
+
   async function claim() {
+    if (!canClaim || parsedAmount === null) return;
     try {
       const hash = await writeContractAsync({
         address: contracts.stablecoin,
         abi: MyTokenAbi,
         functionName: "mint",
-        value: parseEther(FAUCET_VALUE),
+        value: parseEther(amount),
       });
       setTxHash(hash);
-      toast.success(`Claimed ${FAUCET_STABLE} SPRK`);
-      setTimeout(() => refetchBalance(), 4000);
+      toast.success(`Claimed ${sprkPreview.toLocaleString()} SPRK`);
+      setTimeout(() => {
+        refetchBalance();
+        refetchNative();
+      }, 4000);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Claim failed";
-      toast.error(message);
+      if (!/user rejected/i.test(message)) toast.error(message);
     }
   }
 
@@ -103,7 +141,7 @@ export default function JoinPage() {
           </>
         ) : (
           <>
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-6">
               <div>
                 <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Your balance
@@ -118,10 +156,82 @@ export default function JoinPage() {
                   {truncateAddress(address, 6)}
                 </p>
               </div>
-              <Button onClick={claim} disabled={busy}>
-                {busy ? <Loader2 className="animate-spin" /> : <Droplets />}
-                {busy ? "Claiming…" : "Claim SPRK"}
-              </Button>
+
+              {nativeBalance ? (
+                <p className="font-mono text-xs text-muted-foreground">
+                  Wallet: {Number(formatUnits(nativeBalance.value, 18)).toLocaleString()} 0G
+                </p>
+              ) : null}
+            </div>
+
+            <div className="mt-6 border-t border-border pt-6">
+              <label
+                htmlFor={inputId}
+                className="text-xs uppercase tracking-[0.16em] text-muted-foreground"
+              >
+                Amount to send (0G)
+              </label>
+              <div className="mt-2 flex flex-wrap gap-3 sm:flex-nowrap">
+                <Input
+                  id={inputId}
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="0.05"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  disabled={busy}
+                  aria-invalid={amountError ? "true" : undefined}
+                  aria-describedby={amountError ? `${inputId}-error` : `${inputId}-preview`}
+                  className="font-mono text-base tabular-nums sm:max-w-[200px]"
+                />
+                <Button onClick={claim} disabled={!canClaim} className="shrink-0">
+                  {busy ? <Loader2 className="animate-spin" /> : <Droplets />}
+                  {busy ? "Claiming…" : "Claim SPRK"}
+                </Button>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {QUICK_AMOUNTS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setAmount(value)}
+                    disabled={busy}
+                    className="rounded-full border border-input px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {value} 0G
+                  </button>
+                ))}
+                {nativeBalance && nativeBalance.value > 0n ? (
+                  <button
+                    type="button"
+                    onClick={() => setAmount(formatUnits(nativeBalance.value, 18))}
+                    disabled={busy}
+                    className="rounded-full border border-input px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Max
+                  </button>
+                ) : null}
+              </div>
+
+              {amountError ? (
+                <p id={`${inputId}-error`} className="mt-3 text-xs text-destructive">
+                  {amountError}
+                </p>
+              ) : (
+                <p id={`${inputId}-preview`} className="mt-3 text-xs text-muted-foreground">
+                  You&apos;ll send{" "}
+                  <span className="font-mono tabular-nums text-foreground">
+                    {parsedAmount !== null ? parsedAmount.toLocaleString() : "0"} 0G
+                  </span>{" "}
+                  and receive{" "}
+                  <span className="font-mono tabular-nums text-foreground">
+                    {sprkPreview.toLocaleString()} SPRK
+                  </span>{" "}
+                  ({MINT_RATE}× rate, fixed by the contract).
+                </p>
+              )}
             </div>
 
             {txHash ? (
@@ -139,8 +249,7 @@ export default function JoinPage() {
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-        Each claim sends {FAUCET_VALUE} 0G and credits about {FAUCET_STABLE} SprkCoin. Token
-        contract on{" "}
+        Every 0G sent mints {MINT_RATE}× in SprkCoin — send any amount you like. Token contract on{" "}
         <a
           href={explorerAddress(contracts.stablecoin)}
           target="_blank"
