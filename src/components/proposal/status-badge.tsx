@@ -9,6 +9,7 @@ const variantFor: Record<
   voting: "muted",
   passed: "success",
   rejected: "danger",
+  discarded: "danger",
   crowdfunding: "outline",
   active: "success",
   disputed: "danger",

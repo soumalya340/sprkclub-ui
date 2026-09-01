@@ -16,6 +16,7 @@ export type ProposalStatus =
   | "voting"
   | "passed"
   | "rejected"
+  | "discarded"
   | "crowdfunding"
   | "active"
   | "disputed"

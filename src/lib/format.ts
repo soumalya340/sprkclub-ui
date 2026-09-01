@@ -50,6 +50,7 @@ export function statusLabel(status: ProposalStatus): string {
     voting: "Voting",
     passed: "Passed",
     rejected: "Rejected",
+    discarded: "Discarded",
     crowdfunding: "Campaign",
     active: "In delivery",
     disputed: "Disputed",

@@ -11,6 +11,7 @@ import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { CoverUpload } from "@/components/proposal/cover-upload";
 import { normalizeHandle, typeLabel } from "@/lib/format";
+import { PROPOSAL_VOTE_WINDOW_MS } from "@/lib/proposal-lifecycle";
 import type { ProposalType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +56,6 @@ const schema = z.object({
   description: z.string().min(20, "Tell people what you are making").max(600),
   pricePerNft: z.number().positive("Must be above zero"),
   fundingGoal: z.number().positive("Must be above zero"),
-  validTill: z.string().min(1, "Pick a date"),
   type: z.enum(["event", "project", "creative-work"]),
   projectTwitter: optionalHandle,
   creatorTwitter: optionalHandle,
@@ -64,12 +64,6 @@ const schema = z.object({
 });
 
 type Values = z.infer<typeof schema>;
-
-function defaultValidTill(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 21);
-  return d.toISOString().slice(0, 10);
-}
 
 function chipStyles(active: boolean) {
   if (active) {
@@ -150,7 +144,6 @@ export function CreateProposalForm() {
       description: searchParams.get("description") ?? "",
       pricePerNft: 25,
       fundingGoal: 4000,
-      validTill: defaultValidTill(),
       type: "project",
       projectTwitter: "",
       creatorTwitter: "",
@@ -171,16 +164,18 @@ export function CreateProposalForm() {
       watch.description,
       watch.pricePerNft,
       watch.fundingGoal,
-      watch.validTill,
     ].filter((v) => String(v ?? "").trim().length > 0).length;
-    return Math.round((filled / 5) * 100);
-  }, [
-    watch.title,
-    watch.description,
-    watch.pricePerNft,
-    watch.fundingGoal,
-    watch.validTill,
-  ]);
+    return Math.round((filled / 4) * 100);
+  }, [watch.title, watch.description, watch.pricePerNft, watch.fundingGoal]);
+
+  const discardDate = useMemo(() => {
+    const d = new Date(Date.now() + PROPOSAL_VOTE_WINDOW_MS);
+    return d.toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }, []);
 
   function saveDraft() {
     const draft = { ...form.getValues(), cover };
@@ -205,7 +200,10 @@ export function CreateProposalForm() {
         description: values.description,
         pricePerNft: values.pricePerNft,
         fundingGoal: values.fundingGoal,
-        validTill: values.validTill,
+        // Server overwrites to creation + 30 days; kept for API compatibility.
+        validTill: new Date(Date.now() + PROPOSAL_VOTE_WINDOW_MS)
+          .toISOString()
+          .slice(0, 10),
         type: values.type,
         cover: cover ?? undefined,
         projectTwitter: handle(values.projectTwitter),
@@ -502,21 +500,15 @@ export function CreateProposalForm() {
                   </span>
                 </div>
 
-                <div className="flex max-w-[280px] flex-col gap-[7px]">
-                  <label htmlFor="validTill" className="text-[13px] font-semibold">
-                    Valid till
-                  </label>
-                  <FieldInput
-                    id="validTill"
-                    type="date"
-                    className="py-3"
-                    {...form.register("validTill")}
-                  />
-                  {form.formState.errors.validTill ? (
-                    <p className="text-sm text-[#8c3a2e]">
-                      {form.formState.errors.validTill.message}
-                    </p>
-                  ) : null}
+                <div className="flex flex-col gap-1.5 rounded-[10px] border border-[rgba(26,24,20,0.10)] bg-[#F1EDE1] px-3.5 py-3">
+                  <span className="text-[13px] font-semibold">Open for 1 month</span>
+                  <p className="text-[12.5px] leading-relaxed text-[#5E5849]">
+                    Created ideas stay on the floor until{" "}
+                    <span className="font-mono font-medium text-[#1A1814]">
+                      {discardDate}
+                    </span>
+                    . After that they’re discarded. Voters need more than 10 SPRK.
+                  </p>
                 </div>
               </div>
             </section>

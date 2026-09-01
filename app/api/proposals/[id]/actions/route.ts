@@ -10,8 +10,15 @@ import {
   setStatus,
   setWithdrawn,
   submitMilestone,
+  sweepProposalLifecycle,
 } from "@/lib/db/queries";
+import {
+  canVoteWithBalance,
+  isVoteWindowExpired,
+  MIN_SPRK_TO_VOTE,
+} from "@/lib/proposal-lifecycle";
 import { requireAddress } from "@/lib/server/auth";
+import { getSprkBalance } from "@/lib/server/sprk-balance";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,9 +53,23 @@ export async function POST(
           return NextResponse.json({ error: "Unknown vote kind" }, { status: 400 });
         }
         if (isCreator) return deny("A creator cannot vote on their own proposal");
-        if (proposal.status !== "voting" && proposal.status !== "passed") {
+
+        await sweepProposalLifecycle();
+        const fresh = (await getProposal(id)) ?? proposal;
+        if (fresh.status === "discarded" || isVoteWindowExpired(fresh)) {
+          return deny("This proposal expired and was discarded");
+        }
+        if (fresh.status !== "voting" && fresh.status !== "passed") {
           return deny("Voting has closed for this proposal");
         }
+
+        const balance = await getSprkBalance(address);
+        if (balance != null && !canVoteWithBalance(balance)) {
+          return deny(
+            `Hold more than ${MIN_SPRK_TO_VOTE} SPRK to vote (you have ${Math.floor(balance)})`,
+          );
+        }
+
         await castVote(id, address, body.kind);
         break;
       }

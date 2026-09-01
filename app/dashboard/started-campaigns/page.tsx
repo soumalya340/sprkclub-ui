@@ -7,6 +7,7 @@ import { ConvertModal } from "@/components/proposal/convert-modal";
 import { MilestonePanel } from "@/components/milestone/milestone-panel";
 import { Button } from "@/components/ui/button";
 import { isPassed, voteShare } from "@/lib/format";
+import { isVisibleToCreator } from "@/lib/proposal-lifecycle";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 
@@ -14,7 +15,11 @@ export default function DashboardStartedPage() {
   const address = useAddress();
   const proposals = useSprkStore((s) => s.proposals);
   const mine = address
-    ? proposals.filter((p) => p.creator.toLowerCase() === address.toLowerCase())
+    ? proposals.filter(
+        (p) =>
+          p.creator.toLowerCase() === address.toLowerCase() &&
+          isVisibleToCreator(p),
+      )
     : [];
   const activeWithMilestones = mine.filter(
     (p) =>
@@ -22,6 +27,7 @@ export default function DashboardStartedPage() {
       p.milestones.some((m) => m.status === "submitted"),
   );
   const readyToLaunch = mine.filter((p) => p.status === "passed");
+  const discarded = mine.filter((p) => p.status === "discarded");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -63,6 +69,21 @@ export default function DashboardStartedPage() {
               ))}
             </div>
           )}
+
+          {discarded.length > 0 ? (
+            <section className="mt-16 border-t border-border pt-10">
+              <h2 className="font-display text-3xl tracking-tight">Discarded</h2>
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                Ideas that passed one month without converting. Visible here for
+                24 hours, then removed.
+              </p>
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {discarded.map((p) => (
+                  <ProposalCard key={p.id} proposal={p} />
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {readyToLaunch.length > 0 ? (
             <section id="ready-to-launch" className="mt-16 scroll-mt-24 border-t border-border pt-10">

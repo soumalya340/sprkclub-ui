@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +11,10 @@ import {
   typeLabel,
   voteShare,
 } from "@/lib/format";
+import {
+  formatDiscardCountdown,
+  isVoteWindowExpired,
+} from "@/lib/proposal-lifecycle";
 import type { Proposal } from "@/lib/types";
 
 export function ProposalCard({
@@ -21,6 +28,21 @@ export function ProposalCard({
     proposal.status,
   );
   const share = funded ? fundingShare(proposal) : voteShare(proposal);
+  const showCountdown =
+    proposal.status === "voting" || proposal.status === "discarded";
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!showCountdown) return;
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, [showCountdown]);
+
+  const countdown = showCountdown
+    ? formatDiscardCountdown(proposal, now)
+    : null;
+  const expired =
+    proposal.status === "discarded" || isVoteWindowExpired(proposal, now);
 
   const inner = (
     <>
@@ -33,7 +55,7 @@ export function ProposalCard({
       </div>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={proposal.status} />
+          <StatusBadge status={expired && proposal.status === "voting" ? "discarded" : proposal.status} />
           <Badge variant="muted">{typeLabel(proposal.type)}</Badge>
         </div>
         <h3 className="font-display text-2xl leading-snug tracking-tight text-foreground">
@@ -53,14 +75,34 @@ export function ProposalCard({
                 : `${share}% of voters`}
             </p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {funded
-              ? `Ends ${formatDate(proposal.endDate ?? proposal.validTill)}`
-              : `Valid till ${formatDate(proposal.validTill)}`}
-          </p>
+          <div className="text-right">
+            {showCountdown ? (
+              <>
+                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  {expired ? "Status" : "Time left"}
+                </p>
+                <p
+                  className={`font-mono text-sm tabular-nums ${
+                    expired ? "text-destructive" : "text-foreground"
+                  }`}
+                >
+                  {countdown}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {funded
+                  ? `Ends ${formatDate(proposal.endDate ?? proposal.validTill)}`
+                  : `Valid till ${formatDate(proposal.validTill)}`}
+              </p>
+            )}
+          </div>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-          <div className="h-full rounded-full bg-primary" style={{ width: `${share}%` }} />
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${share}%` }}
+          />
         </div>
       </div>
     </>

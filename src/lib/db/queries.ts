@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { db } from "./client";
 import { backers, milestones, proposals, votes } from "./schema";
 import type {
@@ -12,6 +12,10 @@ import type {
   ProposalStatus,
   VoteKind,
 } from "@/lib/types";
+import {
+  PROPOSAL_VOTE_WINDOW_MS,
+  DISCARDED_VISIBLE_MS,
+} from "@/lib/proposal-lifecycle";
 
 /** Addresses are stored lowercased so lookups never depend on checksum casing. */
 export const norm = (address: string) => address.trim().toLowerCase();
@@ -87,8 +91,34 @@ function toProposal({ proposal, votes: v, backers: b, milestones: m }: Rows): Pr
   };
 }
 
+/**
+ * Flip expired voting ideas to discarded, then hard-delete discarded rows
+ * past the 24h creator grace window.
+ */
+export async function sweepProposalLifecycle(now = Date.now()): Promise<void> {
+  const expireBefore = now - PROPOSAL_VOTE_WINDOW_MS;
+  await db
+    .update(proposals)
+    .set({ status: "discarded", updatedAt: new Date() })
+    .where(
+      and(eq(proposals.status, "voting"), lt(proposals.createdAt, expireBefore)),
+    );
+
+  const purgeBefore = now - PROPOSAL_VOTE_WINDOW_MS - DISCARDED_VISIBLE_MS;
+  await db
+    .delete(proposals)
+    .where(
+      and(
+        eq(proposals.status, "discarded"),
+        lt(proposals.createdAt, purgeBefore),
+      ),
+    );
+}
+
 /** Every proposal with its votes, backers and milestones joined in. */
 export async function listProposals(): Promise<Proposal[]> {
+  await sweepProposalLifecycle();
+
   const [p, v, b, m] = await Promise.all([
     db.select().from(proposals),
     db.select().from(votes),
@@ -155,6 +185,11 @@ export async function createProposal(
   creator: string,
 ): Promise<Proposal> {
   const id = `prop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  const createdAt = Date.now();
+  // Hard rule: ideas live one month from creation, then discard.
+  const validTill = new Date(createdAt + PROPOSAL_VOTE_WINDOW_MS)
+    .toISOString()
+    .slice(0, 10);
 
   await db.insert(proposals).values({
     id,
@@ -164,9 +199,9 @@ export async function createProposal(
     pricePerNft: input.pricePerNft,
     fundingGoal: input.fundingGoal,
     type: input.type,
-    validTill: input.validTill,
+    validTill,
     creator: norm(creator),
-    createdAt: Date.now(),
+    createdAt,
     status: "voting",
     stablecoin: "SPRK",
     projectTwitter: input.projectTwitter || null,
