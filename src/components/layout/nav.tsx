@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Menu } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
@@ -20,6 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const menus = [
   {
@@ -33,23 +34,52 @@ const menus = [
 
 export function Nav() {
   const [open, setOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    function handleScroll() {
+      const next = window.scrollY > 0;
+      setHasScrolled((prev) => (prev === next ? prev : next));
+    }
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b transition-colors duration-200",
+        hasScrolled
+          ? "border-border-medium bg-background/70 backdrop-blur-sm"
+          : "border-border-low bg-transparent",
+      )}
+    >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo />
 
-        <nav className="hidden items-center gap-1 md:flex">
-          <Button asChild variant="ghost" className="text-sm font-medium">
+        <nav className="hidden items-stretch gap-1 md:flex">
+          <Button
+            asChild
+            variant="ghost"
+            className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
+          >
             <Link href="/launch">Launch</Link>
           </Button>
-          <Button asChild variant="ghost" className="text-sm font-medium">
+          <Button
+            asChild
+            variant="ghost"
+            className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
+          >
             <Link href="/faucet">Faucet</Link>
           </Button>
           {menus.map((menu) => (
             <DropdownMenu key={menu.label}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-sm font-medium">
+                <Button
+                  variant="ghost"
+                  className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
+                >
                   {menu.label}
                   <ChevronDown className="size-3.5 opacity-60" />
                 </Button>

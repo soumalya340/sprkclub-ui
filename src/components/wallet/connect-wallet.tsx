@@ -90,13 +90,12 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                size={compact ? "sm" : "default"}
-                className="font-mono text-xs tabular-nums"
+                className="h-8 gap-1.5 rounded-full px-3 font-mono text-xs tabular-nums"
                 aria-label={`Wallet ${truncateAddress(account.address)}`}
               >
-                <span className="size-1.5 rounded-full bg-success" aria-hidden />
+                <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden />
                 {truncateAddress(account.address)}
-                <ChevronDown className="size-3.5 opacity-60" aria-hidden />
+                <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 p-1.5">

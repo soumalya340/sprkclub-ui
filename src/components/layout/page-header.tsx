@@ -12,10 +12,10 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+    <div className="border-b-dashed flex flex-col gap-4 pb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
         {kicker ? (
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-sand-1100">
             {kicker}
           </p>
         ) : null}

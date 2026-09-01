@@ -27,6 +27,14 @@ function OffChainStatus({ status }: { status: Milestone["status"] }) {
   return <Badge variant="muted">Indexed</Badge>;
 }
 
+function LocationTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full bg-sand-200 px-2 py-0.5 text-[10px] font-medium tracking-wide text-sand-900 uppercase">
+      {children}
+    </span>
+  );
+}
+
 export function MilestonePanel({ proposal }: { proposal: Proposal }) {
   const address = useAddress();
   const submitMilestone = useSprkStore((s) => s.submitMilestone);
@@ -88,7 +96,10 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium">{m.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{m.title}</p>
+                    <LocationTag>Off-chain</LocationTag>
+                  </div>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                     {m.description}
                   </p>
@@ -106,7 +117,10 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-sm font-medium">On-chain milestone #{onChainIndex}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">Milestone #{onChainIndex}</p>
+              <LocationTag>On-chain</LocationTag>
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Status: {audit.statusLabel ?? "…"}
             </p>

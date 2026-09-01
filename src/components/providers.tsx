@@ -12,17 +12,17 @@ import { WagmiProvider } from "wagmi";
 import { activeChain } from "@/lib/chain/config";
 import { wagmiConfig } from "@/lib/chain/wagmi";
 
-// Match the app's warm-dark palette rather than RainbowKit's default blue.
+// Match the app's sand palette (hue 286.25) rather than RainbowKit's default blue.
 const theme: Theme = {
   ...darkTheme({ borderRadius: "small", overlayBlur: "small" }),
   colors: {
     ...darkTheme().colors,
-    accentColor: "#e4dfd3",
-    accentColorForeground: "#0c0c0b",
-    modalBackground: "#141412",
-    modalBorder: "rgba(242, 239, 230, 0.12)",
-    modalText: "#f2efe6",
-    modalTextSecondary: "#9a9488",
+    accentColor: "#e6e6ea",
+    accentColorForeground: "#111112",
+    modalBackground: "#29292a",
+    modalBorder: "rgba(249, 249, 251, 0.12)",
+    modalText: "#f9f9fb",
+    modalTextSecondary: "#9c9ca4",
   },
 };
 
