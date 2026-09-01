@@ -28,7 +28,7 @@ export const proposals = pgTable(
     cover: text("cover").notNull(),
     pricePerNft: doublePrecision("price_per_nft").notNull(),
     fundingGoal: doublePrecision("funding_goal").notNull(),
-    type: text("type").notNull(), // "collab" | "holder"
+    type: text("type").notNull(), // "event" | "project" | "creative-work"
     validTill: text("valid_till").notNull(),
     creator: text("creator").notNull(),
     createdAt: bigint("created_at", { mode: "number" }).notNull(),
@@ -44,6 +44,10 @@ export const proposals = pgTable(
     disputeReason: text("dispute_reason"),
     /** Deployed SprkClub contract address, once the proposal goes on-chain. */
     contractAddress: text("contract_address"),
+    projectTwitter: text("project_twitter"),
+    creatorTwitter: text("creator_twitter"),
+    projectInstagram: text("project_instagram"),
+    creatorInstagram: text("creator_instagram"),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

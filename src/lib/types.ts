@@ -1,7 +1,16 @@
-export type ProposalType = "collab" | "holder";
+/** What the campaign is funding — shown on Launch and badges. */
+export type ProposalType = "event" | "project" | "creative-work";
 /** SPRK is the only unit the app uses — 1 SPRK == 1 unit of price/goal/stake everywhere. */
 export type Stablecoin = "SPRK";
 export type VoteKind = "like" | "dislike";
+
+/** Social handles stored without a leading @. */
+export interface ProposalSocials {
+  projectTwitter?: string;
+  creatorTwitter?: string;
+  projectInstagram?: string;
+  creatorInstagram?: string;
+}
 
 export type ProposalStatus =
   | "voting"
@@ -59,6 +68,10 @@ export interface Proposal {
   withdrawn: boolean;
   /** Deployed SprkClub contract, once the proposal is live on 0G Chain. */
   contractAddress?: string;
+  projectTwitter?: string;
+  creatorTwitter?: string;
+  projectInstagram?: string;
+  creatorInstagram?: string;
 }
 
 export interface CreateProposalInput {
@@ -70,6 +83,10 @@ export interface CreateProposalInput {
   fundingGoal: number;
   type: ProposalType;
   validTill: string;
+  projectTwitter?: string;
+  creatorTwitter?: string;
+  projectInstagram?: string;
+  creatorInstagram?: string;
 }
 
 export interface ConvertInput {

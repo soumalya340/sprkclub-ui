@@ -80,6 +80,10 @@ function toProposal({ proposal, votes: v, backers: b, milestones: m }: Rows): Pr
     disputeReason: proposal.disputeReason ?? undefined,
     withdrawn: proposal.withdrawn,
     contractAddress: proposal.contractAddress ?? undefined,
+    projectTwitter: proposal.projectTwitter ?? undefined,
+    creatorTwitter: proposal.creatorTwitter ?? undefined,
+    projectInstagram: proposal.projectInstagram ?? undefined,
+    creatorInstagram: proposal.creatorInstagram ?? undefined,
   };
 }
 
@@ -165,6 +169,10 @@ export async function createProposal(
     createdAt: Date.now(),
     status: "voting",
     stablecoin: "SPRK",
+    projectTwitter: input.projectTwitter || null,
+    creatorTwitter: input.creatorTwitter || null,
+    projectInstagram: input.projectInstagram || null,
+    creatorInstagram: input.creatorInstagram || null,
   });
 
   return (await getProposal(id))!;

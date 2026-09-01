@@ -83,9 +83,7 @@ export default function ProposalDetailPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             <StatusBadge status={proposal.status} />
-            <Badge variant={proposal.type === "holder" ? "outline" : "muted"}>
-              {typeLabel(proposal.type)}
-            </Badge>
+            <Badge variant="muted">{typeLabel(proposal.type)}</Badge>
           </div>
           <h1 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
             {proposal.title}
@@ -93,6 +91,61 @@ export default function ProposalDetailPage() {
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
             {proposal.description}
           </p>
+          {(proposal.projectTwitter ||
+            proposal.creatorTwitter ||
+            proposal.projectInstagram ||
+            proposal.creatorInstagram) && (
+            <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              {proposal.projectTwitter ? (
+                <li>
+                  <a
+                    href={`https://x.com/${proposal.projectTwitter}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Project X @{proposal.projectTwitter}
+                  </a>
+                </li>
+              ) : null}
+              {proposal.creatorTwitter ? (
+                <li>
+                  <a
+                    href={`https://x.com/${proposal.creatorTwitter}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Creator X @{proposal.creatorTwitter}
+                  </a>
+                </li>
+              ) : null}
+              {proposal.projectInstagram ? (
+                <li>
+                  <a
+                    href={`https://instagram.com/${proposal.projectInstagram}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Project IG @{proposal.projectInstagram}
+                  </a>
+                </li>
+              ) : null}
+              {proposal.creatorInstagram ? (
+                <li>
+                  <a
+                    href={`https://instagram.com/${proposal.creatorInstagram}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Creator IG @{proposal.creatorInstagram}
+                  </a>
+                </li>
+              ) : null}
+            </ul>
+          )}
           <dl className="mt-8 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-muted-foreground">Price / NFT</dt>

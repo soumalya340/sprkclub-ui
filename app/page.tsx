@@ -124,7 +124,7 @@ const steps = [
     n: "01",
     title: "Propose",
     location: "OFF-CHAIN",
-    body: "Draft the work, the NFT price, and the funding goal. Collab or Holder — two contract shapes, one club.",
+    body: "Draft the work, the NFT price, and the funding goal. Event, Project, or Creative Work — one club.",
   },
   {
     n: "02",

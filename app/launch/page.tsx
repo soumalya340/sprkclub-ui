@@ -1,22 +1,18 @@
 "use client";
 
 import { Suspense } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { CreateProposalForm } from "@/components/proposal/create-form";
 
 export default function CreateProposalPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <PageHeader
-        kicker="Launch"
-        title="Create a proposal"
-        description="Describe the work, set a price per NFT, and name a funding goal. The club votes before anything goes on-chain."
-      />
-      <div className="mt-10">
-        <Suspense>
-          <CreateProposalForm />
-        </Suspense>
-      </div>
-    </div>
+    <Suspense
+      fallback={
+        <div className="min-h-svh bg-[#FAF5EF] px-6 py-12 sm:px-14" aria-busy="true">
+          <div className="mx-auto h-40 max-w-[1180px] animate-pulse rounded-2xl bg-[rgba(26,24,20,0.06)]" />
+        </div>
+      }
+    >
+      <CreateProposalForm />
+    </Suspense>
   );
 }

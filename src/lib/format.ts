@@ -21,7 +21,28 @@ export function formatDate(value: string | number): string {
 }
 
 export function typeLabel(type: ProposalType): string {
-  return type === "collab" ? "Sprkclub Collab" : "Sprkclub Holder";
+  switch (type) {
+    case "event":
+      return "Event";
+    case "project":
+      return "Project";
+    case "creative-work":
+      return "Creative Work";
+    default:
+      return type;
+  }
+}
+
+/** Strip @ and profile URL prefixes so we store a clean handle. */
+export function normalizeHandle(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  return trimmed
+    .replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//i, "")
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .split(/[/?#]/)[0]!
+    .trim();
 }
 
 export function statusLabel(status: ProposalStatus): string {

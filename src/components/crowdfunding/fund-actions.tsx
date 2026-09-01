@@ -95,9 +95,8 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
           </Button>
         ) : (
           <p className="text-sm text-muted-foreground">
-            {proposal.type === "holder"
-              ? "Holder campaigns share later yield with NFT owners after delivery."
-              : "Creator can withdraw the next tranche after a milestone is finalized (or Alice wins a challenge)."}
+            Creator can withdraw the next tranche after a milestone is finalized
+            (or Alice wins a challenge).
           </p>
         )
       ) : null}

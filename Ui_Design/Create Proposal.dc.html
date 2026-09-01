@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#FAF5EF;font-family:'Schibsted Grotesk',system-ui,sans-serif;color:#1A1814;-webkit-font-smoothing:antialiased}
+a{color:#1A1814}a:hover{color:#6B6455}
+input,textarea,button{font-family:inherit}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer}
+textarea{resize:vertical}
+::placeholder{color:#A9A294}
+</style></helmet>
+<div style="min-height:100vh;padding:48px 56px 96px;box-sizing:border-box">
+<div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<a href="#" style="display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-size:14px;color:#6B6455;width:fit-content">← Back</a>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:10px;max-width:620px">
+<span style="font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:.18em;color:#9A9384">LAUNCH</span>
+<h1 style="margin:0;font-size:56px;line-height:1.02;letter-spacing:-.035em;font-weight:600">Create a proposal</h1>
+<p style="margin:6px 0 0;font-size:16px;line-height:1.5;color:#6B6455;text-wrap:pretty">Describe the work, set a price per NFT, and name a funding goal. The club votes before anything goes on-chain.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;min-width:190px">
+<div style="display:flex;justify-content:space-between;font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:#9A9384"><span>READY</span><span>{{ pct }}%</span></div>
+<div style="height:3px;border-radius:2px;background:rgba(26,24,20,.10);overflow:hidden"><div style="height:100%;width:{{ pctW }};background:#1A1814;transition:width .35s cubic-bezier(.2,.8,.2,1)"></div></div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:48px 56px;align-items:flex-start">
+
+<div style="flex:1 1 460px;min-width:0;display:flex;flex-direction:column;gap:0">
+
+<div style="display:flex;flex-wrap:wrap;gap:16px 28px;padding:34px 0;border-top:1px solid rgba(26,24,20,.13)">
+<div style="flex:0 0 88px;display:flex;flex-direction:column;gap:4px;position:sticky;top:32px">
+<span style="font:500 11px/1 'JetBrains Mono',monospace;color:#B6AF9E">01</span>
+<span style="font-size:13px;font-weight:600;letter-spacing:-.01em">Identity</span>
+</div>
+<div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-direction:column;gap:22px;align-items:stretch">
+<label style="display:flex;flex-direction:column;gap:8px;cursor:pointer">
+<div style="aspect-ratio:16/6;min-height:150px;border-radius:12px;border:1px dashed rgba(26,24,20,.24);background:#F3EFE4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#8A8375;transition:border-color .2s,background .2s" style-hover="border-color:#1A1814;background:#EFEADC">
+<span style="font-size:22px;line-height:1;font-weight:300">+</span>
+<span style="font-size:13px">Add cover image</span>
+</div>
+<span style="font-size:12px;color:#9A9384">Optional — a stock cover is used if you skip.</span>
+</label>
+<div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font-size:13px;font-weight:600;letter-spacing:-.005em">Title</span>
+<input value="{{ title }}" onChange="{{ onTitle }}" placeholder="Harbor Protocol" style="width:100%;box-sizing:border-box;padding:13px 15px;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;color:#1A1814;font-size:15px;outline:none;transition:border-color .18s,background .18s" style-focus="border-color:#1A1814;background:#FFFDF8" />
+</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600;letter-spacing:-.005em">Description</span><span style="font:400 11px/1 'JetBrains Mono',monospace;color:#B6AF9E">{{ descCount }}</span></div>
+<textarea value="{{ desc }}" onChange="{{ onDesc }}" rows="5" placeholder="What are you making, who is it for, and what does an NFT unlock?" style="width:100%;box-sizing:border-box;padding:13px 15px;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;color:#1A1814;font-size:15px;line-height:1.55;outline:none;transition:border-color .18s,background .18s" style-focus="border-color:#1A1814;background:#FFFDF8"></textarea>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px 28px;padding:34px 0;border-top:1px solid rgba(26,24,20,.13)">
+<div style="flex:0 0 88px;display:flex;flex-direction:column;gap:4px;position:sticky;top:32px">
+<span style="font:500 11px/1 'JetBrains Mono',monospace;color:#B6AF9E">02</span>
+<span style="font-size:13px;font-weight:600;letter-spacing:-.01em">Framing</span>
+</div>
+<div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:26px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:13px;font-weight:600">Campaign type</span>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+<button onClick="{{ pickEvent }}" style="text-align:left;cursor:pointer;padding:14px 15px 15px;border-radius:12px;border:1px solid {{ evBorder }};background:{{ evBg }};color:{{ evFg }};display:flex;flex-direction:column;gap:6px;transition:all .18s">
+<span style="display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:{{ evDot }};box-shadow:0 0 0 3px {{ evRing }}"></span>Event</span>
+<span style="font-size:12.5px;line-height:1.45;opacity:.62">A gathering, residency, or time-bound experience.</span>
+</button>
+<button onClick="{{ pickProject }}" style="text-align:left;cursor:pointer;padding:14px 15px 15px;border-radius:12px;border:1px solid {{ prBorder }};background:{{ prBg }};color:{{ prFg }};display:flex;flex-direction:column;gap:6px;transition:all .18s">
+<span style="display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:{{ prDot }};box-shadow:0 0 0 3px {{ prRing }}"></span>Project</span>
+<span style="font-size:12.5px;line-height:1.45;opacity:.62">Ongoing work with a clear delivery goal.</span>
+</button>
+<button onClick="{{ pickWork }}" style="text-align:left;cursor:pointer;padding:14px 15px 15px;border-radius:12px;border:1px solid {{ cwBorder }};background:{{ cwBg }};color:{{ cwFg }};display:flex;flex-direction:column;gap:6px;transition:all .18s">
+<span style="display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:{{ cwDot }};box-shadow:0 0 0 3px {{ cwRing }}"></span>Creative Work</span>
+<span style="font-size:12.5px;line-height:1.45;opacity:.62">A zine, film, drop, or other finished piece.</span>
+</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:13px;font-weight:600">Social links</span><span style="font-size:12px;color:#9A9384">Optional — X and Instagram handles.</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 14px">
+<div style="display:flex;align-items:center;gap:0;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;padding:0 14px;transition:border-color .18s" style-focus-within="border-color:#1A1814">
+<span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B6AF9E;width:64px;flex:none">X / proj</span>
+<input value="{{ px }}" onChange="{{ onPx }}" placeholder="@projectname" style="flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:15px;color:#1A1814;outline:none" />
+</div>
+<div style="display:flex;align-items:center;gap:0;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;padding:0 14px" style-focus-within="border-color:#1A1814">
+<span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B6AF9E;width:64px;flex:none">X / you</span>
+<input value="{{ cx }}" onChange="{{ onCx }}" placeholder="@yourname" style="flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:15px;color:#1A1814;outline:none" />
+</div>
+<div style="display:flex;align-items:center;gap:0;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;padding:0 14px" style-focus-within="border-color:#1A1814">
+<span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B6AF9E;width:64px;flex:none">IG / proj</span>
+<input value="{{ pi }}" onChange="{{ onPi }}" placeholder="@projectname" style="flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:15px;color:#1A1814;outline:none" />
+</div>
+<div style="display:flex;align-items:center;gap:0;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;padding:0 14px" style-focus-within="border-color:#1A1814">
+<span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B6AF9E;width:64px;flex:none">IG / you</span>
+<input value="{{ ci }}" onChange="{{ onCi }}" placeholder="@yourname" style="flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:15px;color:#1A1814;outline:none" />
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px 28px;padding:34px 0;border-top:1px solid rgba(26,24,20,.13);border-bottom:1px solid rgba(26,24,20,.13)">
+<div style="flex:0 0 88px;display:flex;flex-direction:column;gap:4px;position:sticky;top:32px">
+<span style="font:500 11px/1 'JetBrains Mono',monospace;color:#B6AF9E">03</span>
+<span style="font-size:13px;font-weight:600;letter-spacing:-.01em">Economics</span>
+</div>
+<div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:22px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font-size:13px;font-weight:600">Price per NFT</span>
+<div style="display:flex;align-items:center;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;padding:0 14px" style-focus-within="border-color:#1A1814">
+<input value="{{ price }}" onChange="{{ onPrice }}" inputMode="numeric" style="flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:15px;color:#1A1814;outline:none" />
+<span style="font:500 12px/1 'JetBrains Mono',monospace;color:#9A9384">SPRK</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font-size:13px;font-weight:600">Funding goal</span>
+<div style="display:flex;align-items:center;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;padding:0 14px" style-focus-within="border-color:#1A1814">
+<input value="{{ goal }}" onChange="{{ onGoal }}" inputMode="numeric" style="flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:15px;color:#1A1814;outline:none" />
+<span style="font:500 12px/1 'JetBrains Mono',monospace;color:#9A9384">SPRK</span>
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:rgba(26,24,20,.045);font-size:13px;color:#5E5849">
+<span style="font:500 12px/1 'JetBrains Mono',monospace;color:#1A1814">{{ editions }}</span>
+<span>editions sell out the goal · stake <span style="font-weight:600;color:#1A1814">{{ stake }} SPRK</span> to launch</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px;max-width:280px">
+<span style="font-size:13px;font-weight:600">Valid till</span>
+<input type="date" value="{{ until }}" onChange="{{ onUntil }}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(26,24,20,.10);background:#F1EDE1;color:#1A1814;font-size:15px;outline:none" style-focus="border-color:#1A1814;background:#FFFDF8" />
+</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:26px;flex-wrap:wrap">
+<span style="font-size:13px;color:#8A8375;max-width:340px;text-wrap:pretty">Proposals stay editable until the club vote opens.</span>
+<div style="display:flex;align-items:center;gap:12px">
+<button style="padding:14px 20px;border-radius:999px;border:1px solid rgba(26,24,20,.16);background:transparent;color:#1A1814;font-size:14.5px;font-weight:500;cursor:pointer;transition:background .18s" style-hover="background:rgba(26,24,20,.05)">Save draft</button>
+<button style="padding:14px 26px;border-radius:999px;border:0;background:#1A1814;color:#FAF5EF;font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform .18s,box-shadow .18s;box-shadow:0 1px 2px rgba(26,24,20,.2)" style-hover="transform:translateY(-1px);box-shadow:0 6px 18px rgba(26,24,20,.22)">Create proposal <span style="opacity:.55">→</span></button>
+</div>
+</div>
+
+</div>
+
+<div style="flex:1 1 320px;max-width:372px;position:sticky;top:32px;display:flex;flex-direction:column;gap:14px">
+<div style="border-radius:16px;background:#FFFDF8;border:1px solid rgba(26,24,20,.09);overflow:hidden;box-shadow:0 1px 2px rgba(26,24,20,.05),0 12px 32px -18px rgba(26,24,20,.35)">
+<div style="height:118px;background:linear-gradient(140deg,#EFE9DA,#E4DDCA);display:flex;align-items:flex-end;justify-content:space-between;padding:12px 16px">
+<span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:.16em;color:#8A8375">PREVIEW</span>
+<span style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;padding:5px 8px;border-radius:999px;background:#1A1814;color:#FAF5EF">{{ typeLabel }}</span>
+</div>
+<div style="padding:18px 18px 20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.2">{{ previewTitle }}</span>
+<span style="font-size:13.5px;line-height:1.5;color:#6B6455;text-wrap:pretty">{{ previewDesc }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:9px;padding-top:13px;border-top:1px solid rgba(26,24,20,.09)">
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#8A8375">Price / NFT</span><span style="font:500 13px/1.2 'JetBrains Mono',monospace">{{ price }} SPRK</span></div>
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#8A8375">Goal</span><span style="font:500 13px/1.2 'JetBrains Mono',monospace">{{ goal }} SPRK</span></div>
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#8A8375">Editions</span><span style="font:500 13px/1.2 'JetBrains Mono',monospace">{{ editions }}</span></div>
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#8A8375">Stake to launch</span><span style="font:500 13px/1.2 'JetBrains Mono',monospace">{{ stake }} SPRK</span></div>
+</div>
+</div>
+</div>
+<p style="margin:0;font-size:12px;line-height:1.5;color:#9A9384;padding:0 4px;text-wrap:pretty">The preview is what voters see in the club feed.</p>
+</div>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#1A1814&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#1A1814&quot;,&quot;#3F5D45&quot;,&quot;#7A4A2B&quot;,&quot;#2B3A67&quot;]},&quot;stakePercent&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:5,&quot;max&quot;:50,&quot;step&quot;:5,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = { title: "", desc: "", type: "Project", px: "", cx: "", pi: "", ci: "", price: "25", goal: "4000", until: "2026-09-22" };
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? "#1A1814";
+    const price = parseFloat(s.price) || 0, goal = parseFloat(s.goal) || 0;
+    const editions = price > 0 ? Math.floor(goal / price) : 0;
+    const stakePct = this.props.stakePercent ?? 20;
+    const filled = [s.title, s.desc, s.price, s.goal, s.until].filter(v => String(v).trim().length).length;
+    const pct = Math.round((filled / 5) * 100);
+    const chip = (t) => s.type === t
+      ? { Bg: accent, Fg: "#FAF5EF", Border: accent, Dot: "#FAF5EF", Ring: "rgba(250,245,239,.25)" }
+      : { Bg: "#F1EDE1", Fg: "#1A1814", Border: "rgba(26,24,20,.10)", Dot: "transparent", Ring: "rgba(26,24,20,.22)" };
+    const ev = chip("Event"), pr = chip("Project"), cw = chip("Creative Work");
+    return {
+      ...s, pct, pctW: pct + "%", editions,
+      stake: Math.round(goal * stakePct / 100).toLocaleString(),
+      descCount: s.desc.length + " / 600",
+      typeLabel: s.type.toUpperCase(),
+      previewTitle: s.title.trim() || "Untitled proposal",
+      previewDesc: s.desc.trim() || "Your description will appear here as you write.",
+      evBg: ev.Bg, evFg: ev.Fg, evBorder: ev.Border, evDot: ev.Dot, evRing: ev.Ring,
+      prBg: pr.Bg, prFg: pr.Fg, prBorder: pr.Border, prDot: pr.Dot, prRing: pr.Ring,
+      cwBg: cw.Bg, cwFg: cw.Fg, cwBorder: cw.Border, cwDot: cw.Dot, cwRing: cw.Ring,
+      pickEvent: () => this.setState({ type: "Event" }),
+      pickProject: () => this.setState({ type: "Project" }),
+      pickWork: () => this.setState({ type: "Creative Work" }),
+      onTitle: this.set("title"), onDesc: this.set("desc"), onPrice: this.set("price"),
+      onGoal: this.set("goal"), onUntil: this.set("until"),
+      onPx: this.set("px"), onCx: this.set("cx"), onPi: this.set("pi"), onCi: this.set("ci"),
+    };
+  }
+}
+</script>
+</body>
+</html>

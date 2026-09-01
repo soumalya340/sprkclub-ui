@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAddress } from "@/lib/sprk-store";
@@ -9,20 +9,22 @@ import { cn } from "@/lib/utils";
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 /**
- * Square dashed drop target for a proposal's cover image. Uploads straight to
- * Vercel Blob on selection and hands the resulting public URL back via
- * onChange — the form falls back to a stock cover when this stays empty.
+ * Cover image drop target. Uploads to Vercel Blob and returns the public URL.
+ * `variant="banner"` matches the Launch create-proposal design (16/6).
  */
 export function CoverUpload({
   value,
   onChange,
+  variant = "card",
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
+  variant?: "card" | "banner";
 }) {
   const address = useAddress();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const banner = variant === "banner";
 
   async function handleFile(file: File) {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -65,14 +67,21 @@ export function CoverUpload({
       />
 
       {value ? (
-        <div className="group relative aspect-[3/2] w-full max-w-xs overflow-hidden rounded-xl border border-border">
+        <div
+          className={cn(
+            "group relative w-full overflow-hidden",
+            banner
+              ? "aspect-[16/6] min-h-[150px] rounded-[12px] border border-[rgba(26,24,20,0.13)]"
+              : "aspect-[3/2] max-w-xs rounded-xl border border-border",
+          )}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt="Proposal cover" className="size-full object-cover" />
           <button
             type="button"
             onClick={() => onChange(null)}
             aria-label="Remove cover image"
-            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-opacity hover:bg-background"
+            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[#FFFDF8]/90 text-[#1A1814] shadow-sm transition-opacity hover:bg-[#FFFDF8]"
           >
             <X className="size-3.5" />
           </button>
@@ -83,15 +92,20 @@ export function CoverUpload({
           disabled={busy}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "flex aspect-[3/2] w-full max-w-xs flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60",
+            "flex w-full flex-col items-center justify-center gap-2 transition-[border-color,background-color] disabled:cursor-not-allowed disabled:opacity-60",
+            banner
+              ? "aspect-[16/6] min-h-[150px] rounded-[12px] border border-dashed border-[rgba(26,24,20,0.24)] bg-[#F3EFE4] text-[#8A8375] hover:border-[#1A1814] hover:bg-[#EFEADC]"
+              : "aspect-[3/2] max-w-xs rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground",
           )}
         >
           {busy ? (
             <Loader2 className="size-5 animate-spin" />
           ) : (
-            <Plus className="size-5" />
+            <span className={cn(banner ? "text-[22px] font-light leading-none" : "text-lg")}>
+              +
+            </span>
           )}
-          <span className="text-xs">
+          <span className={cn(banner ? "text-[13px]" : "text-xs")}>
             {busy ? "Uploading…" : "Add cover image"}
           </span>
         </button>
