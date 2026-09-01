@@ -30,7 +30,14 @@ import { useSprkStore } from "@/lib/sprk-store";
  * Real wallet connection via RainbowKit (WalletConnect + injected), rendered
  * with this app's own button/menu styling instead of RainbowKit's default chrome.
  */
-export function ConnectWallet({ compact = false }: { compact?: boolean }) {
+export function ConnectWallet({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  /** Styles the disconnected/unsupported trigger — lets the hero render it as a pill. */
+  className?: string;
+}) {
   const { disconnect } = useDisconnect();
   const proposals = useSprkStore((s) => s.proposals);
 
@@ -44,7 +51,7 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
           // Avoid a connected/disconnected flash before wagmi has hydrated.
           return (
             <div aria-hidden className="pointer-events-none opacity-0">
-              <Button size={compact ? "sm" : "default"}>
+              <Button size={compact ? "sm" : "default"} className={className}>
                 <Wallet />
                 Connect wallet
               </Button>
@@ -54,7 +61,11 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
 
         if (!connected) {
           return (
-            <Button size={compact ? "sm" : "default"} onClick={openConnectModal}>
+            <Button
+              size={compact ? "sm" : "default"}
+              className={className}
+              onClick={openConnectModal}
+            >
               <Wallet />
               Connect wallet
             </Button>

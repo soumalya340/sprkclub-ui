@@ -58,47 +58,37 @@ export function Nav() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo />
 
-        <nav className="hidden items-stretch gap-1 md:flex">
-          <Button
-            asChild
-            variant="ghost"
-            className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
+        <nav className="hidden items-center gap-8 md:flex">
+          <Link
+            href="/explore/ongoing-proposals"
+            className="rounded-sm text-[15px] font-medium uppercase tracking-[0.04em] text-ink transition-opacity hover:opacity-55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <Link href="/launch">Launch</Link>
-          </Button>
-          <Button
-            asChild
-            variant="ghost"
-            className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
+            Proposals
+          </Link>
+          <Link
+            href="/explore/campaigns"
+            className="rounded-sm text-[15px] font-medium uppercase tracking-[0.04em] text-ink transition-opacity hover:opacity-55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <Link href="/join">Join The Movement</Link>
-          </Button>
-          {menus.map((menu) => (
-            <DropdownMenu key={menu.label}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="rounded-xl px-3 py-2 text-sm font-medium text-sand-1100 hover:bg-sand-100 hover:text-foreground"
-                >
-                  {menu.label}
-                  <ChevronDown className="size-3.5 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {menu.items.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href}>{item.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ))}
+            Campaigns
+          </Link>
+          <Link
+            href="/join"
+            className="rounded-sm text-[15px] font-medium uppercase tracking-[0.04em] text-ink transition-opacity hover:opacity-55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            Join
+          </Link>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className="hidden sm:block">
             <ConnectWallet />
           </div>
+          <Button
+            asChild
+            className="hidden rounded-full px-5 text-[15px] font-medium uppercase tracking-[0.04em] md:inline-flex"
+          >
+            <Link href="/launch">Create a proposal</Link>
+          </Button>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden" aria-label="Open menu">

@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Palette, typography and voice are documented in /brand.md.
+   Layout and component structure are documented in /Design.md.
+   Every color below traces back to a token in brand.md — no ad-hoc hex. */
+
 html {
   font-synthesis-weight: none;
   font-synthesis-style: none;
@@ -11,23 +15,22 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
-  font-size-adjust: 0.52;
 }
 
 kbd,
 pre,
 samp {
-  font-family: var(--font-berkeley-mono);
+  font-family: var(--font-mono);
 }
 
 :not(pre) > code {
-  background-color: oklch(0.927 0.005 286.25);
-  color: oklch(0.2269 0.002 286.25);
+  background-color: var(--parchment-deep);
+  color: var(--ink);
   padding: 0.125rem 0.375rem;
   border-radius: 0.375rem;
   font-size: 0.875em;
-  border: 1px solid oklch(0.884 0.007 286.25);
-  font-family: var(--font-berkeley-mono);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
 }
 
 pre code {
@@ -37,103 +40,67 @@ pre code {
 }
 
 :root {
-  --font-sans: var(--font-inter), "Inter Variable", Inter, system-ui, sans-serif;
-  --font-display: var(--font-inter), "Inter Variable", Inter, system-ui, sans-serif;
-  --font-berkeley-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
-}
+  /* ── Brand palette (brand.md) ─────────────────────────────── */
+  --parchment: oklch(0.9765 0.0098 87.47);
+  --parchment-deep: oklch(0.953 0.0156 86.43);
+  --surface: oklch(0.9945 0.0057 84.57);
+  --ink: oklch(0.2178 0 89.88);
+  --ink-soft: oklch(0.5257 0.0119 81.78);
+  --clay: oklch(0.5155 0.0915 54.02);
+  --clay-tint: oklch(0.6892 0.0644 55.08);
+  --line: oklch(0.8929 0.0216 85.95);
 
-@theme {
-  --color-cream: oklch(0.9553 0.003 286.25);
-  --color-bg1: oklch(0.9826 0.002 286.25);
+  /* ── shadcn semantic layer ────────────────────────────────── */
+  --background: var(--parchment);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--parchment);
+  --secondary: var(--parchment-deep);
+  --secondary-foreground: var(--ink);
+  --muted: var(--parchment-deep);
+  --muted-foreground: var(--ink-soft);
+  --accent: var(--clay);
+  --accent-foreground: var(--parchment);
+  --destructive: oklch(0.4578 0.1146 30.45);
+  --destructive-foreground: var(--parchment);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--clay);
 
-  --color-border-strong: oklch(0.839 0.009 286.25);
-  --color-border-medium: oklch(0.884 0.007 286.25);
-  --color-border-low: oklch(0.927 0.005 286.25);
-  --color-border-extra-low: oklch(0.9665 0.003 286.25);
+  --success: oklch(0.5306 0.0515 135.35);
+  --warn: oklch(0.5541 0.0939 69.4);
 
-  --color-sand-100: oklch(0.9665 0.003 286.25);
-  --color-sand-200: oklch(0.927 0.005 286.25);
-  --color-sand-300: oklch(0.884 0.007 286.25);
-  --color-sand-400: oklch(0.839 0.009 286.25);
-  --color-sand-500: oklch(0.7935 0.011 286.25);
-  --color-sand-600: oklch(0.7454 0.012 286.25);
-  --color-sand-700: oklch(0.6938 0.012 286.25);
-  --color-sand-800: oklch(0.6436 0.011 286.25);
-  --color-sand-900: oklch(0.5916 0.01 286.25);
-  --color-sand-1000: oklch(0.5438 0.008 286.25);
-  --color-sand-1100: oklch(0.4947 0.007 286.25);
-  --color-sand-1200: oklch(0.442 0.005 286.25);
-  --color-sand-1300: oklch(0.3909 0.004 286.25);
-  --color-sand-1400: oklch(0.3356 0.003 286.25);
-  --color-sand-1500: oklch(0.2269 0.002 286.25);
-  --color-sand-1600: oklch(0.18 0.001 286.25);
-
-  --color-highlight: oklch(1 0 0);
-  --color-black: oklch(0 0 0);
-  --color-white: oklch(1 0 0);
-
-  --color-gray-900: oklch(0.1725 0.008 286.25);
-  --color-gray-800: oklch(0.2706 0.012 286.25);
-  --color-gray-600: oklch(0.4569 0.014 286.25);
-  --color-gray-500: oklch(0.5137 0.014 286.25);
-  --color-gray-400: oklch(0.6196 0.014 286.25);
-
-  --font-berkeley-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
-}
-
-:root {
   --radius: 0.625rem;
 
-  --background: oklch(0.9826 0.002 286.25);
-  --foreground: oklch(0.2269 0.002 286.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2269 0.002 286.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2269 0.002 286.25);
-  --primary: oklch(0.2269 0.002 286.25);
-  --primary-foreground: oklch(0.9826 0.002 286.25);
-  --secondary: oklch(0.9665 0.003 286.25);
-  --secondary-foreground: oklch(0.2269 0.002 286.25);
-  --muted: oklch(0.9665 0.003 286.25);
-  --muted-foreground: oklch(0.4947 0.007 286.25);
-  --accent: oklch(0.9665 0.003 286.25);
-  --accent-foreground: oklch(0.2269 0.002 286.25);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.884 0.007 286.25);
-  --input: oklch(0.884 0.007 286.25);
-  --ring: oklch(0.6938 0.012 286.25);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-wordmark: var(--font-special-elite), "Courier New", serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
 
-  /* Not part of the reference token set — kept for SPRK's own semantic
-     success/warn usage (StatusBadge, milestone states). */
-  --success: oklch(0.6455 0.11 152.5);
-  --warn: oklch(0.7686 0.1153 70.08);
-  --destructive-foreground: oklch(0.9826 0.002 286.25);
-
-  --sidebar: oklch(0.9553 0.003 286.25);
-  --sidebar-foreground: oklch(0.2269 0.002 286.25);
-  --sidebar-primary: oklch(0.2269 0.002 286.25);
-  --sidebar-primary-foreground: oklch(0.9826 0.002 286.25);
-  --sidebar-accent: oklch(0.927 0.005 286.25);
-  --sidebar-accent-foreground: oklch(0.2269 0.002 286.25);
-  --sidebar-border: oklch(0.884 0.007 286.25);
-  --sidebar-ring: oklch(0.6938 0.012 286.25);
+  --sidebar: var(--parchment-deep);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--ink);
+  --sidebar-primary-foreground: var(--parchment);
+  --sidebar-accent: var(--clay);
+  --sidebar-accent-foreground: var(--parchment);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--clay);
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --color-parchment: var(--parchment);
+  --color-parchment-deep: var(--parchment-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-clay: var(--clay);
+  --color-clay-tint: var(--clay-tint);
+  --color-line: var(--line);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -155,23 +122,27 @@ pre code {
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warn: var(--warn);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
-  --font-mono: var(--font-berkeley-mono);
+  --font-wordmark: var(--font-wordmark);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
+
   --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
@@ -180,8 +151,8 @@ pre code {
   }
 
   body {
-    background-color: var(--color-bg1);
-    color: oklch(0.2269 0.002 286.25);
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: var(--font-sans);
     min-height: 100svh;
   }
@@ -202,152 +173,70 @@ pre code {
   }
 }
 
-.font-berkeley-mono {
-  font-family: var(--font-berkeley-mono);
-  font-weight: 400;
-}
+/* ── Dashed hairlines ───────────────────────────────────────────
+   Structural divisions only (stage pipeline, stat groups). Ordinary
+   containment uses a solid border. See Design.md §5. */
 
-.border-l-dashed-wide {
+.border-t-dashed {
   background: repeating-linear-gradient(
-      to bottom,
-      oklch(0.927 0.005 286.25) 0px,
-      oklch(0.927 0.005 286.25) 12px,
-      transparent 12px,
-      transparent 24px
+      to right,
+      var(--line) 0px,
+      var(--line) 6px,
+      transparent 6px,
+      transparent 12px
     )
-    left/1px 100% no-repeat;
+    top/100% 1px no-repeat;
 }
 
-.border-r-dashed-wide {
+.border-b-dashed {
   background: repeating-linear-gradient(
-      to bottom,
-      oklch(0.927 0.005 286.25) 0px,
-      oklch(0.927 0.005 286.25) 12px,
-      transparent 12px,
-      transparent 24px
+      to right,
+      var(--line) 0px,
+      var(--line) 6px,
+      transparent 6px,
+      transparent 12px
     )
-    right/1px 100% no-repeat;
-}
-
-.border-lr-dashed-wide {
-  background:
-    repeating-linear-gradient(
-        to bottom,
-        oklch(0.927 0.005 286.25) 0px,
-        oklch(0.927 0.005 286.25) 12px,
-        transparent 12px,
-        transparent 24px
-      )
-      left/1px 100% no-repeat,
-    repeating-linear-gradient(
-        to bottom,
-        oklch(0.927 0.005 286.25) 0px,
-        oklch(0.927 0.005 286.25) 12px,
-        transparent 12px,
-        transparent 24px
-      )
-      right/1px 100% no-repeat;
-}
-
-.border-horizontal-dashed-wide {
-  background:
-    repeating-linear-gradient(
-        to right,
-        oklch(0.927 0.005 286.25) 0px,
-        oklch(0.927 0.005 286.25) 12px,
-        transparent 12px,
-        transparent 24px
-      )
-      top/100% 1px no-repeat,
-    repeating-linear-gradient(
-        to right,
-        oklch(0.927 0.005 286.25) 0px,
-        oklch(0.927 0.005 286.25) 12px,
-        transparent 12px,
-        transparent 24px
-      )
-      bottom/100% 1px no-repeat;
-}
-
-.border-vertical-dashed-wide {
-  background: repeating-linear-gradient(
-      to bottom,
-      oklch(0.927 0.005 286.25) 0px,
-      oklch(0.927 0.005 286.25) 12px,
-      transparent 12px,
-      transparent 24px
-    )
-    center/1px 100% no-repeat;
+    bottom/100% 1px no-repeat;
 }
 
 .border-all-dashed-medium {
   background:
     repeating-linear-gradient(
         to right,
-        oklch(0.884 0.007 286.25) 0px,
-        oklch(0.884 0.007 286.25) 6px,
+        var(--line) 0px,
+        var(--line) 6px,
         transparent 6px,
         transparent 12px
       )
       top/100% 1px no-repeat,
     repeating-linear-gradient(
         to right,
-        oklch(0.884 0.007 286.25) 0px,
-        oklch(0.884 0.007 286.25) 6px,
+        var(--line) 0px,
+        var(--line) 6px,
         transparent 6px,
         transparent 12px
       )
       bottom/100% 1px no-repeat,
     repeating-linear-gradient(
         to bottom,
-        oklch(0.884 0.007 286.25) 0px,
-        oklch(0.884 0.007 286.25) 6px,
+        var(--line) 0px,
+        var(--line) 6px,
         transparent 6px,
         transparent 12px
       )
       left/1px 100% no-repeat,
     repeating-linear-gradient(
         to bottom,
-        oklch(0.884 0.007 286.25) 0px,
-        oklch(0.884 0.007 286.25) 6px,
+        var(--line) 0px,
+        var(--line) 6px,
         transparent 6px,
         transparent 12px
       )
       right/1px 100% no-repeat;
 }
 
-.border-lr-dashed-medium {
-  background:
-    repeating-linear-gradient(
-        to bottom,
-        oklch(0.884 0.007 286.25) 0px,
-        oklch(0.884 0.007 286.25) 6px,
-        transparent 6px,
-        transparent 12px
-      )
-      left/1px 100% no-repeat,
-    repeating-linear-gradient(
-        to bottom,
-        oklch(0.884 0.007 286.25) 0px,
-        oklch(0.884 0.007 286.25) 6px,
-        transparent 6px,
-        transparent 12px
-      )
-      right/1px 100% no-repeat;
-}
-
-/* Bottom-edge variant of border-horizontal-dashed-wide's rule, at the
-   medium (6px) cadence — used for PageHeader's closing rule. */
-.border-b-dashed {
-  background: repeating-linear-gradient(
-      to right,
-      oklch(0.884 0.007 286.25) 0px,
-      oklch(0.884 0.007 286.25) 6px,
-      transparent 6px,
-      transparent 12px
-    )
-    bottom/100% 1px no-repeat;
-}
+/* ── Motion ─────────────────────────────────────────────────────
+   Entrance spring per brand.md. Non-essential motion only. */
 
 @keyframes hero-entrance {
   0% {
@@ -360,12 +249,8 @@ pre code {
   }
 }
 
-.hero-entrance {
-  animation: hero-entrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: no-preference) {
   .hero-entrance {
-    animation: none;
+    animation: hero-entrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 }

@@ -26,7 +26,7 @@ export function Logo({ className }: { className?: string }) {
       )}
     >
       <SparkMark className="size-5" />
-      <span className="text-sm font-semibold tracking-[0.22em]">SPRKCLUB</span>
+      <span className="font-wordmark text-xl leading-none tracking-tight">sprkclub</span>
     </Link>
   );
 }

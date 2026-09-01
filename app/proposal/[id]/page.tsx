@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { ConvertModal } from "@/components/proposal/convert-modal";
 import { StatusBadge } from "@/components/proposal/status-badge";
 import { VotePanel } from "@/components/proposal/vote-panel";
@@ -64,6 +65,13 @@ export default function ProposalDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <Link
+        href="/explore/ongoing-proposals"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+        Back to proposals
+      </Link>
       <div className="grid gap-10 lg:grid-cols-[1fr_22rem]">
         <div>
           <div className="overflow-hidden rounded-xl border border-border">

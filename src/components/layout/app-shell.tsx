@@ -3,7 +3,6 @@
 import { type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { Footer } from "./footer";
-import { Nav } from "./nav";
 import { useSprkSync } from "@/lib/sprk-store";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -12,7 +11,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
-      <Nav />
       <main className="flex-1">{children}</main>
       <Footer />
       <Toaster

@@ -1,15 +1,123 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { ChevronRight, Upload } from "lucide-react";
+import { Geist, Special_Elite } from "next/font/google";
 import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
-import { DM_Serif_Display, Manrope } from "next/font/google";
-import { Button } from "@/components/ui/button";
-import { ProposalCard } from "@/components/proposal/proposal-card";
-import { useSprkStore } from "@/lib/sprk-store";
-import { formatAmount } from "@/lib/format";
+import { useRef, useState } from "react";
+import { SparkMark } from "@/components/brand/logo";
+import { ConnectWallet } from "@/components/wallet/connect-wallet";
 
-const dmSerifDisplay = DM_Serif_Display({ subsets: ["latin"], weight: "400" });
-const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500"] });
+const geist = Geist({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const specialElite = Special_Elite({ subsets: ["latin"], weight: "400" });
+
+const HERO_VIDEO_SRC =
+  "https://pollen-batch-41236914.figma.site/_components/v2/f0ee2dae7671c170c34f12e31c4cb41418976c98/769c564298c132f7919405cd9f17c1b1231f341d.769c5642.mp4";
+
+function NavButton({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="font-medium text-[15px] uppercase tracking-[0.04em] text-[#1a1a1a] opacity-100 transition-opacity hover:opacity-55"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function Hero() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pitch, setPitch] = useState("");
+
+  function submitPitch() {
+    const params = pitch.trim() ? `?description=${encodeURIComponent(pitch.trim())}` : "";
+    router.push(`/launch${params}`);
+  }
+
+  return (
+    <section className={`${geist.className} relative min-h-svh w-full overflow-hidden`}>
+      <video
+        className="absolute inset-0 z-0 size-full object-cover"
+        src={HERO_VIDEO_SRC}
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[687px]"
+        style={{
+          background: "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%)",
+        }}
+      />
+
+      <div className="relative z-[2] mx-auto max-w-[1360px]">
+        <nav className="flex items-center justify-between px-6 pb-4 pt-5 sm:px-20 sm:pt-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-black no-underline sm:gap-3"
+          >
+            <SparkMark className="size-6 shrink-0 sm:size-7" />
+            <span
+              className={`${specialElite.className} select-none text-[32px] leading-none sm:text-[40px]`}
+            >
+              sprkclub
+            </span>
+          </Link>
+
+          <div className="absolute left-1/2 hidden -translate-x-1/2 gap-8 md:flex">
+            <NavButton href="/launch">Launch</NavButton>
+            <NavButton href="/explore/ongoing-proposals">Proposals</NavButton>
+            <NavButton href="/explore/campaigns">Campaigns</NavButton>
+            <NavButton href="/join">Join The Movement</NavButton>
+          </div>
+
+          <div className="flex items-center gap-4 sm:gap-8">
+            <ConnectWallet className="h-auto rounded-full bg-[#0a0a0a] px-5 py-3.5 font-medium text-[15px] uppercase tracking-[0.04em] text-[#fafafa] transition-all hover:bg-[#333] active:scale-95" />
+          </div>
+        </nav>
+
+        <div className="flex flex-col items-center px-6 pb-24 pt-16 text-center">
+          <h1 className="mb-5 max-w-[820px] font-medium text-[clamp(40px,6vw,68px)] leading-[1.05] tracking-[-0.04em] text-[#1a1a1a]">
+            People make their dreams real.
+          </h1>
+          <p className="mb-10 max-w-[500px] font-medium text-xl leading-relaxed text-[#767676]">
+            Tell the club what you want to build. We&apos;ll turn it into a proposal
+            the DAO can vote on, fund, and hold you to.
+          </p>
+
+          <div className="relative min-h-[208px] w-[701px] max-w-full overflow-hidden rounded-[44px] border-[3px] border-white bg-white/[0.06] shadow-[0_0_4px_0_rgba(0,0,0,0.15)] backdrop-blur-[20px] max-md:w-[calc(100vw-48px)]">
+            <textarea
+              value={pitch}
+              onChange={(e) => setPitch(e.target.value)}
+              placeholder="I'm building a community darkroom with a monthly print swap. I want members to fund the lease and own a piece of the space...."
+              className="absolute left-[29px] top-[24px] h-[90px] w-[609px] max-w-[calc(100%-58px)] resize-none border-none bg-transparent font-medium text-xl text-[#905831] leading-relaxed outline-none placeholder:text-[#905831]/70 max-md:text-[17px]"
+            />
+
+            <input ref={fileInputRef} type="file" accept="image/*,.pdf" className="hidden" />
+            <button
+              type="button"
+              aria-label="Upload reference material"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute left-[21px] top-[137px] flex size-11 items-center justify-center rounded-full border border-white/70 bg-transparent backdrop-blur-[14px] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+            >
+              <Upload className="size-[18px] shrink-0 text-[#1a1a1a]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={submitPitch}
+              className="absolute bottom-[21px] right-[21px] flex h-14 w-[156px] items-center justify-center rounded-[44px] border-none bg-black font-medium text-base uppercase tracking-[0.02em] text-[#fafafa] shadow-[0_0_2px_0_rgba(0,0,0,0.05)] transition-all hover:bg-[#333] active:scale-95"
+            >
+              Create a proposal
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const steps = [
   {
@@ -39,89 +147,9 @@ const steps = [
 ];
 
 export default function Home() {
-  const proposals = useSprkStore((s) => s.proposals);
-  const featured = proposals
-    .filter((p) =>
-      ["crowdfunding", "active", "passed", "voting"].includes(p.status),
-    )
-    .slice(0, 3);
-  const raised = proposals.reduce((sum, p) => sum + p.totalFunding, 0);
-  const live = proposals.filter(
-    (p) => p.status === "crowdfunding" || p.status === "active",
-  ).length;
-
   return (
     <div>
-      <section className="hero-entrance mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pt-20">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-            Sprkclub
-          </p>
-          <h1
-            className={`${dmSerifDisplay.className} mt-5 max-w-3xl text-5xl leading-[1.05] tracking-tight sm:text-7xl`}
-          >
-            People make their <em className="italic">dreams</em> real.
-          </h1>
-          <p
-            className={`${manrope.className} mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg`}
-          >
-            A DAO + NFT club for proposals that get voted, funded, and delivered.
-            Stake, mint, and hold the work — not a pitch deck.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <Link href="/launch">
-                Create a proposal <ArrowRight />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/explore/campaigns">Explore campaigns</Link>
-            </Button>
-          </div>
-        </div>
-
-        <dl className="border-t-dashed mt-14 grid grid-cols-3 gap-6 pt-8">
-          <div>
-            <dt className="text-xs uppercase tracking-[0.16em] text-sand-1100">
-              Proposals
-            </dt>
-            <dd className="mt-1 font-display text-3xl tabular-nums">{proposals.length}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-[0.16em] text-sand-1100">
-              Live campaigns
-            </dt>
-            <dd className="mt-1 font-display text-3xl tabular-nums">{live}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-[0.16em] text-sand-1100">
-              Raised
-            </dt>
-            <dd className="mt-1 font-display text-3xl tabular-nums">
-              {formatAmount(raised, "SPRK").replace(" SPRK", "")}
-              <span className="ml-1 text-base text-muted-foreground">SPRK</span>
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="font-display text-3xl tracking-tight sm:text-4xl">On the floor</h2>
-            <Button asChild variant="link" className="px-0">
-              <Link href="/explore/ongoing-proposals">
-                All proposals <ArrowRight />
-              </Link>
-            </Button>
-          </div>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((p) => (
-              <ProposalCard key={p.id} proposal={p} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       <section className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">

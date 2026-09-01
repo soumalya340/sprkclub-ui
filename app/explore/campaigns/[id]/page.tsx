@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { FundActions } from "@/components/crowdfunding/fund-actions";
 import { MilestonePanel } from "@/components/milestone/milestone-panel";
 import { StatusBadge } from "@/components/proposal/status-badge";
@@ -36,6 +37,13 @@ export default function CrowdfundingDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <Link
+        href="/explore/campaigns"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+        Back to campaigns
+      </Link>
       <div className="grid gap-10 lg:grid-cols-[1fr_22rem]">
         <div>
           <div className="overflow-hidden rounded-xl border border-border">

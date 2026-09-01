@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CreateProposalForm } from "@/components/proposal/create-form";
 
@@ -12,7 +13,9 @@ export default function CreateProposalPage() {
         description="Describe the work, set a price per NFT, and name a funding goal. The club votes before anything goes on-chain."
       />
       <div className="mt-10">
-        <CreateProposalForm />
+        <Suspense>
+          <CreateProposalForm />
+        </Suspense>
       </div>
     </div>
   );

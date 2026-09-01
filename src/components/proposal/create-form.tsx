@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,13 +32,14 @@ function defaultValidTill(): string {
 
 export function CreateProposalForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const address = useAddress();
   const createProposal = useSprkStore((s) => s.createProposal);
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: "",
-      description: "",
+      description: searchParams.get("description") ?? "",
       pricePerNft: 25,
       fundingGoal: 4000,
       validTill: defaultValidTill(),
