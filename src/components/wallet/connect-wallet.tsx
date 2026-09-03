@@ -12,7 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useDisconnect } from "wagmi";
+import { useDisconnect, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,9 +22,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { activeChain, explorerAddress } from "@/lib/chain/config";
+import { activeChain, explorerAddress, ogMainnet, ogTestnet } from "@/lib/chain/config";
 import { truncateAddress } from "@/lib/format";
 import { useSprkStore } from "@/lib/sprk-store";
+
+/**
+ * Wallet-side network toggle. Only switches which chain the connected wallet
+ * talks to — the app's contracts/API always stay pinned to `activeChain`
+ * (chain/config.ts). Switching away from that chain means writes (stake,
+ * mint, vote, dispute) will fail or target the wrong deployment.
+ */
+function NetworkToggle({ currentChainId }: { currentChainId: number }) {
+  const { switchChain, isPending } = useSwitchChain();
+
+  return (
+    <div className="flex items-center gap-1 rounded-md bg-secondary/60 p-0.5">
+      {[ogMainnet, ogTestnet].map((c) => {
+        const isActive = currentChainId === c.id;
+        return (
+          <button
+            key={c.id}
+            type="button"
+            disabled={isPending || isActive}
+            onClick={() => switchChain({ chainId: c.id })}
+            className={`flex-1 rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-default ${
+              isActive
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {c.testnet ? "Testnet" : "Mainnet"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * Real wallet connection via RainbowKit (WalletConnect + injected), rendered
@@ -79,7 +112,7 @@ export function ConnectWallet({
           );
         }
 
-        if (chain.unsupported || chain.id !== activeChain.id) {
+        if (chain.unsupported) {
           return (
             <Button
               size={compact ? "sm" : "default"}
@@ -92,6 +125,7 @@ export function ConnectWallet({
           );
         }
 
+        const onActiveChain = chain.id === activeChain.id;
         const addr = account.address.toLowerCase();
         const backedCount = proposals.filter((p) =>
           p.backers.some((b) => b.address.toLowerCase() === addr),
@@ -111,7 +145,10 @@ export function ConnectWallet({
                 className="h-8 gap-1.5 rounded-full px-3 font-mono text-xs tabular-nums"
                 aria-label={`Wallet ${truncateAddress(account.address)}`}
               >
-                <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden />
+                <span
+                  className={`size-1.5 shrink-0 rounded-full ${onActiveChain ? "bg-success" : "bg-warn"}`}
+                  aria-hidden
+                />
                 {truncateAddress(account.address)}
                 <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden />
               </Button>
@@ -126,6 +163,16 @@ export function ConnectWallet({
                 <p className="mt-1.5 font-mono text-sm tabular-nums tracking-tight text-foreground">
                   {truncateAddress(account.address, 6)}
                 </p>
+                <div className="mt-2.5">
+                  <NetworkToggle currentChainId={chain.id} />
+                </div>
+                {!onActiveChain ? (
+                  <p className="mt-2 flex items-start gap-1.5 text-xs text-warn">
+                    <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                    The app runs on {activeChain.name}. Actions like stake,
+                    mint, and vote need the wallet on {activeChain.name} too.
+                  </p>
+                ) : null}
               </div>
 
               <DropdownMenuSeparator className="my-1.5" />

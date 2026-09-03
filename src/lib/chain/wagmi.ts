@@ -9,7 +9,7 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
-import { ogMainnet } from "@/lib/chain/config";
+import { ogMainnet, ogTestnet } from "@/lib/chain/config";
 
 /**
  * WalletConnect project id. Create a free one at https://cloud.walletconnect.com
@@ -49,11 +49,20 @@ const connectors = connectorsForWallets(
   },
 );
 
+/**
+ * Both chains stay registered so the wallet dropdown can offer a mainnet/testnet
+ * toggle (see connect-wallet.tsx). This only changes which chain the wallet is
+ * connected to — it does NOT change which contracts the app reads/writes, which
+ * stay pinned to `activeChain` / `contracts` in chain/config.ts. Switching the
+ * wallet to testnet while the app targets mainnet contracts (or vice versa)
+ * will make writes fail or hit the wrong deployment; the UI warns for this.
+ */
 export const wagmiConfig = createConfig({
   connectors,
-  chains: [ogMainnet],
+  chains: [ogMainnet, ogTestnet],
   transports: {
     [ogMainnet.id]: http(),
+    [ogTestnet.id]: http(),
   },
   ssr: true,
 });
