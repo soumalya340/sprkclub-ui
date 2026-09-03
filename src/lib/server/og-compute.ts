@@ -19,6 +19,32 @@ const COMPUTE_TIMEOUT_MS = 90_000;
 const DIRECT_LEDGER_MIN_OG = 3;
 /** Preferred Direct deposit when creating/funding the ledger. */
 const DIRECT_LEDGER_DEPOSIT_OG = 3;
+/** Proposal description field cap in the launch form. */
+export const PROPOSAL_DESCRIPTION_MAX = 600;
+
+type ChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+export type ChatCompletion = {
+  content: string;
+  model: string;
+  path: "router" | "direct";
+};
+
+export type GenerateDescriptionInput = {
+  title: string;
+  type: "event" | "project" | "creative-work";
+  /** Optional draft hints the model may refine. */
+  draft?: string;
+};
+
+export type GenerateDescriptionResult = {
+  description: string;
+  model: string;
+  path: "router" | "direct";
+};
 
 function computeConfig(network: OgNetwork) {
   return {
@@ -209,16 +235,16 @@ function isRouterKeyRejected(error: unknown): boolean {
   );
 }
 
-async function callOgComputeRouter(
-  ctx: EvaluateContext,
+async function chatViaRouter(
+  messages: ChatMessage[],
   network: OgNetwork,
-): Promise<{ scorecard: Scorecard; raw: string }> {
+  temperature: number,
+): Promise<ChatCompletion> {
   const { baseUrl, apiKey, model } = computeConfig(network);
   if (!apiKey) {
     throw new Error("OG_COMPUTE_API_KEY missing");
   }
 
-  const { text, flags } = buildUserPrompt(ctx);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), COMPUTE_TIMEOUT_MS);
 
@@ -230,14 +256,7 @@ async function callOgComputeRouter(
         "content-type": "application/json",
         authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model,
-        temperature: 0.1,
-        messages: [
-          { role: "system", content: buildSystemPrompt(ctx) },
-          { role: "user", content: text },
-        ],
-      }),
+      body: JSON.stringify({ model, temperature, messages }),
     });
 
     if (!res.ok) {
@@ -249,26 +268,18 @@ async function callOgComputeRouter(
       choices?: Array<{ message?: { content?: string } }>;
       model?: string;
     };
-    const raw = data.choices?.[0]?.message?.content ?? "";
-    if (!raw) throw new Error("0G Compute returned empty content");
+    const content = data.choices?.[0]?.message?.content ?? "";
+    if (!content) throw new Error("0G Compute returned empty content");
 
     return {
-      raw,
-      scorecard: parseModelScorecard(raw, data.model ?? model, flags),
+      content,
+      model: data.model ?? model,
+      path: "router",
     };
   } finally {
     clearTimeout(timer);
   }
 }
-
-type DirectService = {
-  provider: string;
-  url: string;
-  model: string;
-  serviceType: string;
-  inputPrice: bigint;
-  outputPrice: bigint;
-};
 
 async function ensureDirectLedger(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -315,6 +326,15 @@ async function ensureDirectLedger(
   await broker.ledger.addLedger(DIRECT_LEDGER_DEPOSIT_OG);
 }
 
+type DirectService = {
+  provider: string;
+  url: string;
+  model: string;
+  serviceType: string;
+  inputPrice: bigint;
+  outputPrice: bigint;
+};
+
 function pickChatbotService(services: DirectService[]): DirectService {
   const chatbots = services.filter((s) =>
     /chatbot|chat|llm/i.test(s.serviceType || ""),
@@ -323,7 +343,6 @@ function pickChatbotService(services: DirectService[]): DirectService {
   if (pool.length === 0) {
     throw new Error("Direct compute: no inference providers listed");
   }
-  // Prefer lower combined price; fall back to first.
   return [...pool].sort((a, b) => {
     const pa = a.inputPrice + a.outputPrice;
     const pb = b.inputPrice + b.outputPrice;
@@ -332,10 +351,11 @@ function pickChatbotService(services: DirectService[]): DirectService {
   })[0]!;
 }
 
-async function callOgComputeDirect(
-  ctx: EvaluateContext,
+async function chatViaDirect(
+  messages: ChatMessage[],
   network: OgNetwork,
-): Promise<{ scorecard: Scorecard; raw: string }> {
+  temperature: number,
+): Promise<ChatCompletion> {
   const privateKey = process.env.OG_PRIVATE_KEY;
   if (!privateKey) {
     throw new Error("OG_PRIVATE_KEY missing for Direct compute path");
@@ -378,7 +398,7 @@ async function callOgComputeDirect(
 
   const preferredModel = process.env.OG_COMPUTE_MODEL;
   const preferredProvider = process.env.OG_COMPUTE_PROVIDER;
-  let service =
+  const service =
     (preferredProvider &&
       services.find(
         (s) => s.provider.toLowerCase() === preferredProvider.toLowerCase(),
@@ -397,13 +417,11 @@ async function callOgComputeDirect(
     await broker.inference.acknowledgeProviderSigner(service.provider);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    // Already acknowledged is fine.
     if (!/already|acknowledged/i.test(message)) {
       console.warn(`[og-compute] acknowledgeProviderSigner: ${message}`);
     }
   }
 
-  // Ensure provider sub-account has ≥1 0G when auto-fund may not have run yet.
   try {
     await broker.ledger.transferFund(
       service.provider,
@@ -417,7 +435,6 @@ async function callOgComputeDirect(
     }
   }
 
-  const { text, flags } = buildUserPrompt(ctx);
   const { endpoint, model } = await broker.inference.getServiceMetadata(
     service.provider,
   );
@@ -436,11 +453,8 @@ async function callOgComputeDirect(
       },
       body: JSON.stringify({
         model: model || service.model,
-        temperature: 0.1,
-        messages: [
-          { role: "system", content: buildSystemPrompt(ctx) },
-          { role: "user", content: text },
-        ],
+        temperature,
+        messages,
       }),
     });
 
@@ -456,8 +470,8 @@ async function callOgComputeDirect(
       model?: string;
       id?: string;
     };
-    const raw = data.choices?.[0]?.message?.content ?? "";
-    if (!raw) throw new Error("0G Direct Compute returned empty content");
+    const content = data.choices?.[0]?.message?.content ?? "";
+    if (!content) throw new Error("0G Direct Compute returned empty content");
 
     const chatID =
       res.headers.get("ZG-Res-Key") ||
@@ -468,17 +482,14 @@ async function callOgComputeDirect(
       try {
         await broker.inference.processResponse(service.provider, chatID);
       } catch {
-        // Verification is optional; scoring still succeeds.
+        // Verification is optional.
       }
     }
 
     return {
-      raw,
-      scorecard: parseModelScorecard(
-        raw,
-        data.model ?? model ?? service.model ?? "0g-direct",
-        flags,
-      ),
+      content,
+      model: data.model ?? model ?? service.model ?? "0g-direct",
+      path: "direct",
     };
   } finally {
     clearTimeout(timer);
@@ -486,22 +497,17 @@ async function callOgComputeDirect(
 }
 
 /**
- * Grades a milestone deliverable. Always returns a valid scorecard —
- * never leaves Alice stuck without an audit root path.
- *
- * Order: Router (OG_COMPUTE_API_KEY) → Direct broker (OG_PRIVATE_KEY) → Fallback.
+ * OpenAI-compatible chat via Router, then Direct broker.
+ * Throws if both paths fail (no heuristic inventing of content).
  */
-export async function evaluateMilestone(
-  ctx: EvaluateContext,
+export async function completeChat(
+  messages: ChatMessage[],
   network: OgNetwork,
-): Promise<Scorecard> {
-  let routerError: unknown;
-
+  temperature = 0.1,
+): Promise<ChatCompletion> {
   try {
-    const { scorecard } = await callOgComputeRouter(ctx, network);
-    return scorecard;
+    return await chatViaRouter(messages, network, temperature);
   } catch (error) {
-    routerError = error;
     if (!isRouterKeyRejected(error)) {
       console.warn(
         `[og-compute] Router failed, trying Direct: ${
@@ -515,14 +521,113 @@ export async function evaluateMilestone(
     }
   }
 
+  return chatViaDirect(messages, network, temperature);
+}
+
+function typePhrase(type: GenerateDescriptionInput["type"]): string {
+  switch (type) {
+    case "event":
+      return "an event / gathering / residency";
+    case "creative-work":
+      return "a creative work (zine, film, drop, or finished piece)";
+    default:
+      return "a project with a clear delivery goal";
+  }
+}
+
+function scrubGeneratedDescription(raw: string): string {
+  let text = raw.trim();
+  // Strip common wrapper fences / quotes the model may add.
+  if (text.startsWith("```")) {
+    text = text.replace(/^```(?:\w+)?\n?/, "").replace(/\n?```$/, "").trim();
+  }
+  if (
+    (text.startsWith('"') && text.endsWith('"')) ||
+    (text.startsWith("'") && text.endsWith("'"))
+  ) {
+    text = text.slice(1, -1).trim();
+  }
+  // Collapse whitespace but keep paragraph breaks.
+  text = text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+  if (text.length > PROPOSAL_DESCRIPTION_MAX) {
+    text = text.slice(0, PROPOSAL_DESCRIPTION_MAX - 1).trimEnd() + "…";
+  }
+  return text;
+}
+
+/**
+ * Drafts a launch-form proposal description with 0G Compute.
+ * Uses title + campaign type (+ optional draft hints). Does not invent text
+ * when compute is down — callers should surface the error.
+ */
+export async function generateProposalDescription(
+  input: GenerateDescriptionInput,
+  network: OgNetwork,
+): Promise<GenerateDescriptionResult> {
+  const title = input.title.trim();
+  if (title.length < 3) {
+    throw new Error("Enter a title of at least 3 characters before generating");
+  }
+
+  const draft = input.draft?.trim() ?? "";
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content: [
+        "You write short crowdfunding proposal descriptions for Sprkclub.",
+        "Voice: concrete, warm, first-person or direct “we/our”, no hype buzzwords.",
+        "Cover: what is being made, who it is for, and what an NFT unlocks.",
+        `Hard limit: ${PROPOSAL_DESCRIPTION_MAX} characters including spaces.`,
+        "Output ONLY the description body — no title, no markdown headings, no quotes, no preamble.",
+      ].join(" "),
+    },
+    {
+      role: "user",
+      content: [
+        `Title: ${title}`,
+        `Campaign type: ${typePhrase(input.type)}`,
+        draft
+          ? `Creator notes / draft to refine:\n${draft.slice(0, 400)}`
+          : "No draft yet — invent a plausible description from the title and type.",
+        `Write the description now (≤${PROPOSAL_DESCRIPTION_MAX} chars).`,
+      ].join("\n"),
+    },
+  ];
+
+  const completion = await completeChat(messages, network, 0.4);
+  const description = scrubGeneratedDescription(completion.content);
+  if (description.length < 20) {
+    throw new Error("0G Compute returned a description that was too short");
+  }
+
+  return {
+    description,
+    model: completion.model,
+    path: completion.path,
+  };
+}
+
+/**
+ * Grades a milestone deliverable. Always returns a valid scorecard —
+ * never leaves Alice stuck without an audit root path.
+ *
+ * Order: Router (OG_COMPUTE_API_KEY) → Direct broker (OG_PRIVATE_KEY) → Fallback.
+ */
+export async function evaluateMilestone(
+  ctx: EvaluateContext,
+  network: OgNetwork,
+): Promise<Scorecard> {
+  const { text, flags } = buildUserPrompt(ctx);
+  const messages: ChatMessage[] = [
+    { role: "system", content: buildSystemPrompt(ctx) },
+    { role: "user", content: text },
+  ];
+
   try {
-    const { scorecard } = await callOgComputeDirect(ctx, network);
-    return scorecard;
+    const completion = await completeChat(messages, network, 0.1);
+    return parseModelScorecard(completion.content, completion.model, flags);
   } catch (error) {
-    const directReason = error instanceof Error ? error.message : String(error);
-    const routerReason =
-      routerError instanceof Error ? routerError.message : String(routerError);
-    const reason = `router: ${routerReason}; direct: ${directReason}`;
+    const reason = error instanceof Error ? error.message : "unknown error";
     console.warn(`[og-compute] falling back: ${reason}`);
     return fallbackScorecard(ctx, reason);
   }

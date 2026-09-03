@@ -50,9 +50,9 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
   // goal, so the first tranche is drawn with no proof at all — capped by
   // `withdrawFunds` at the same 20% of the goal the creator staked. Only the
   // tranches after it wait on a finalized milestone to unpause the contract.
-  const isFirstTranche = proposal.milestones.length === 0 && !proposal.withdrawn;
+  const isFirstTranche = !proposal.withdrawn;
   const trancheCap = stakeNeed;
-  const canWithdraw = !proposal.withdrawn && (isFirstTranche ? funded : approved);
+  const canWithdraw = isFirstTranche ? funded : approved;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
@@ -100,17 +100,22 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
                 if (ok) toast.success("Funds withdrawn");
               }}
             >
-              {proposal.withdrawn
-                ? "Funds withdrawn"
-                : isFirstTranche
-                  ? `Withdraw first tranche · ${formatAmount(trancheCap, proposal.stablecoin)}`
-                  : "Withdraw funds"}
+              {isFirstTranche
+                ? `Withdraw first tranche · ${formatAmount(trancheCap, proposal.stablecoin)}`
+                : approved
+                  ? "Withdraw next tranche"
+                  : "First tranche withdrawn"}
             </Button>
-            {!proposal.withdrawn && isFirstTranche ? (
+            {isFirstTranche ? (
               <p className="text-xs text-muted-foreground">
                 The first tranche needs no proof — it is capped at{" "}
                 {formatAmount(trancheCap, proposal.stablecoin)}, the 20% you
                 staked. Later tranches unlock once a milestone is finalized.
+              </p>
+            ) : !approved ? (
+              <p className="text-xs text-muted-foreground">
+                The first tranche has been withdrawn. Later tranches unlock once
+                a milestone is finalized.
               </p>
             ) : null}
           </>

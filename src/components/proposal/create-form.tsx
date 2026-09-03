@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState } from "react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
@@ -136,6 +137,7 @@ export function CreateProposalForm() {
   const createProposal = useSprkStore((s) => s.createProposal);
   const [cover, setCover] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -184,6 +186,48 @@ export function CreateProposalForm() {
       toast.success("Draft saved on this device");
     } catch {
       toast.error("Could not save draft");
+    }
+  }
+
+  async function generateDescription() {
+    const title = (form.getValues("title") ?? "").trim();
+    if (title.length < 3) {
+      form.setError("title", { message: "Add a title first (3+ characters)" });
+      toast.error("Add a title before generating a description");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/proposals/generate-description", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title,
+          type: form.getValues("type"),
+          draft: form.getValues("description"),
+        }),
+      });
+      const data = (await res.json()) as {
+        description?: string;
+        model?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.description) {
+        throw new Error(data.error || "Generation failed");
+      }
+      form.setValue("description", data.description, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      toast.success(
+        data.model ? `Description drafted via 0G (${data.model})` : "Description drafted via 0G",
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not generate description",
+      );
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -324,23 +368,39 @@ export function CreateProposalForm() {
                     ) : null}
                   </div>
                   <div className="flex flex-col gap-[7px]">
-                    <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline justify-between gap-3">
                       <label
                         htmlFor="description"
                         className="text-[13px] font-semibold tracking-[-0.005em]"
                       >
                         Description
                       </label>
-                      <span className="font-mono text-[11px] text-[#B6AF9E]">
-                        {(watch.description ?? "").length} / 600
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={generateDescription}
+                          disabled={generating || submitting}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(26,24,20,0.12)] bg-[#FFFDF8] px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] text-[#1A1814] transition-colors hover:border-[#1A1814] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {generating ? (
+                            <Loader2 className="size-3 animate-spin" aria-hidden />
+                          ) : (
+                            <Sparkles className="size-3" aria-hidden />
+                          )}
+                          {generating ? "Generating…" : "Generate with 0G"}
+                        </button>
+                        <span className="font-mono text-[11px] text-[#B6AF9E]">
+                          {(watch.description ?? "").length} / 600
+                        </span>
+                      </div>
                     </div>
                     <textarea
                       id="description"
                       rows={5}
                       placeholder="What are you making, who is it for, and what does an NFT unlock?"
                       {...form.register("description")}
-                      className="w-full resize-y rounded-[10px] border border-[rgba(26,24,20,0.10)] bg-[#F1EDE1] px-[15px] py-[13px] text-[15px] leading-[1.55] text-[#1A1814] outline-none transition-[border-color,background-color] placeholder:text-[#A9A294] focus:border-[#1A1814] focus:bg-[#FFFDF8]"
+                      disabled={generating}
+                      className="w-full resize-y rounded-[10px] border border-[rgba(26,24,20,0.10)] bg-[#F1EDE1] px-[15px] py-[13px] text-[15px] leading-[1.55] text-[#1A1814] outline-none transition-[border-color,background-color] placeholder:text-[#A9A294] focus:border-[#1A1814] focus:bg-[#FFFDF8] disabled:opacity-70"
                     />
                     {form.formState.errors.description ? (
                       <p className="text-sm text-[#8c3a2e]">
