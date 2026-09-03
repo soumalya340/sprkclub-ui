@@ -43,7 +43,7 @@ export function NetworkProvider({
   const setNetwork = useCallback((next: OgNetwork) => {
     if (next === network) return;
     // One year, root path: the choice should survive navigation and restarts.
-    document.cookie = `${NETWORK_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
+    document.cookie = `${NETWORK_COOKIE}=${next}; path=/; max-age=31536000; SameSite=Lax`;
     setNetworkState(next);
     window.location.reload();
   }, [network]);

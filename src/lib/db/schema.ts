@@ -106,6 +106,21 @@ export const milestones = pgTable(
     chainTxHash: text("chain_tx_hash"),
     /** On-chain milestone index the root was recorded under. */
     milestoneIndex: integer("milestone_index"),
+    /**
+     * 0G Storage root of the 0G Compute scorecard JSON, mirrored from the
+     * `auditRootHash` the relayer records on-chain. Null until the milestone is
+     * evaluated — and permanently null for the first tranche, which is drawn
+     * with no proof and therefore never graded.
+     */
+    auditRootHash: text("audit_root_hash"),
+    /** 0G Chain tx that recorded the audit root via recordAuditRoot. */
+    auditTxHash: text("audit_tx_hash"),
+    /** Wall-clock time the scorecard was recorded; the dispute clock's origin. */
+    auditRecordedAt: bigint("audit_recorded_at", { mode: "number" }),
+    /** "0g-compute" or the fallback provider that graded this milestone. */
+    auditProvider: text("audit_provider"),
+    /** Headline score from the scorecard, kept for listing without a Storage read. */
+    auditScore: integer("audit_score"),
     status: text("status").notNull().default("submitted"),
     submittedAt: bigint("submitted_at", { mode: "number" }).notNull(),
     reviewedAt: bigint("reviewed_at", { mode: "number" }),

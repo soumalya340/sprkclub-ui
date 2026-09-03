@@ -245,7 +245,6 @@ Storage / Compute smokes (import the shipped server modules):
 pnpm smoke:og-storage
 pnpm smoke:og-compute
 ```
-```
 
 Neon credentials (`DATABASE_URL` and friends) live in `.env`. Both files are
 gitignored.

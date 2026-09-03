@@ -35,6 +35,19 @@ export interface Milestone {
   submittedAt: number;
   reviewedAt?: number;
   status: MilestoneStatus;
+  /** On-chain milestone index this proof was recorded under. */
+  milestoneIndex?: number;
+  /** 0G Storage root of the proof file. */
+  rootHash?: string;
+  /** 0G Chain tx that recorded the proof root. */
+  chainTxHash?: string;
+  /** 0G Storage root of the 0G Compute scorecard; absent until evaluated. */
+  auditRootHash?: string;
+  /** 0G Chain tx that recorded the audit root. */
+  auditTxHash?: string;
+  auditRecordedAt?: number;
+  auditProvider?: string;
+  auditScore?: number;
 }
 
 export interface Backer {

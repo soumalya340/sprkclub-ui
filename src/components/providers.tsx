@@ -9,8 +9,8 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { WagmiProvider } from "wagmi";
-import { MainnetOnConnect } from "@/components/wallet/mainnet-on-connect";
-import { ogMainnet, type OgNetwork } from "@/lib/chain/chains";
+import type { OgNetwork } from "@/lib/chain/chains";
+import { chainFor } from "@/lib/chain/network";
 import { NetworkProvider } from "@/lib/chain/network-context";
 import { wagmiConfig } from "@/lib/chain/wagmi";
 
@@ -47,13 +47,10 @@ export function Providers({
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={theme}
-          // Connecting always targets mainnet; testnet is opt-in from the
-          // toggle in the connected wallet menu.
-          initialChain={ogMainnet}
+          initialChain={chainFor(initialNetwork)}
           modalSize="compact"
         >
           <NetworkProvider initialNetwork={initialNetwork}>
-            <MainnetOnConnect />
             {children}
           </NetworkProvider>
         </RainbowKitProvider>

@@ -172,6 +172,8 @@ export function MilestonePanel({ proposal }: { proposal: Proposal }) {
             try {
               const body = new FormData();
               body.append("file", file);
+              // The route rejects a proof from anyone but the campaign creator.
+              body.append("address", address);
               const res = await fetch(
                 `/api/milestones/${contractAddress}/${onChainIndex}/proof`,
                 { method: "POST", body },

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordMilestoneAudit } from "@/lib/db/queries";
 import { getNetwork } from "@/lib/server/network";
 import { isAddress, type Address } from "viem";
 import {
@@ -168,6 +169,21 @@ export async function POST(request: Request, { params }: RouteContext) {
       upload.rootHash as `0x${string}`,
       network,
     );
+
+    // Mirror the audit onto the milestone row so campaign pages can list
+    // proof root + audit root without a chain read per milestone. Chain and
+    // 0G Storage stay authoritative — a failure here must not fail the request
+    // when the root is already recorded on-chain.
+    try {
+      await recordMilestoneAudit(parsed.proposalAddr, parsed.milestoneIndex, network, {
+        auditRootHash: upload.rootHash,
+        auditTxHash: chainTxHash,
+        provider: scorecard.provider,
+        overallScore: scorecard.overallScore,
+      });
+    } catch (error) {
+      console.error("Failed to mirror milestone audit to the database", error);
+    }
 
     return NextResponse.json({
       scorecard,

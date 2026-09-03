@@ -46,7 +46,7 @@ function isWalletRejection(error: unknown): boolean {
  * other wallet failure still moves the app so a missing/broken chain add cannot
  * trap the cookie on the previous network. The wrong-chain banner covers drift.
  */
-function NetworkToggle() {
+export function NetworkToggle() {
   const { network, setNetwork } = useNetwork();
   const { isConnected, chainId } = useAccount();
   const { switchChainAsync, isPending } = useSwitchChain();
@@ -141,8 +141,6 @@ export function ConnectWallet({
         }
 
         if (!connected) {
-          // No network toggle while disconnected: connecting always lands on
-          // mainnet, and the toggle only appears once a wallet is attached.
           return (
             <Button
               size={compact ? "sm" : "default"}
@@ -157,17 +155,14 @@ export function ConnectWallet({
 
         if (chain.unsupported) {
           return (
-            <div className="flex items-center gap-2">
-              <NetworkToggle />
-              <Button
-                size={compact ? "sm" : "default"}
-                variant="outline"
-                onClick={openChainModal}
-              >
-                <TriangleAlert className="text-warn" />
-                Switch network
-              </Button>
-            </div>
+            <Button
+              size={compact ? "sm" : "default"}
+              variant="outline"
+              onClick={openChainModal}
+            >
+              <TriangleAlert className="text-warn" />
+              Switch network
+            </Button>
           );
         }
 

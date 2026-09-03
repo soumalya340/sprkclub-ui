@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { BackersPanel } from "@/components/crowdfunding/backers-panel";
 import { FundActions } from "@/components/crowdfunding/fund-actions";
 import { MilestonePanel } from "@/components/milestone/milestone-panel";
+import { MilestoneTable } from "@/components/milestone/milestone-table";
 import { StatusBadge } from "@/components/proposal/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,6 +91,14 @@ export default function CrowdfundingDetailPage() {
 
           <div className="mt-10">
             <h2 className="font-display text-2xl tracking-tight">Milestones</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {proposal.milestones.length} recorded milestone
+              {proposal.milestones.length === 1 ? "" : "s"} after the first
+              tranche, with the 0G Storage and 0G Compute roots behind each.
+            </p>
+            <div className="mt-4">
+              <MilestoneTable proposal={proposal} />
+            </div>
             <div className="mt-4">
               <MilestonePanel proposal={proposal} />
             </div>
@@ -116,6 +126,18 @@ export default function CrowdfundingDetailPage() {
             </p>
           </div>
           <FundActions proposal={proposal} />
+
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              Backers
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Each wallet and what it deposited.
+            </p>
+            <div className="mt-4">
+              <BackersPanel proposal={proposal} />
+            </div>
+          </div>
         </aside>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, desc, eq, lt, sql } from "drizzle-orm";
 import { db } from "./client";
 import { backers, milestones, proposals, votes } from "./schema";
 import type {
@@ -79,6 +79,16 @@ function toProposal({ proposal, votes: v, backers: b, milestones: m }: Rows): Pr
           submittedAt: Number(row.submittedAt),
           reviewedAt: row.reviewedAt ? Number(row.reviewedAt) : undefined,
           status: row.status as Milestone["status"],
+          milestoneIndex: row.milestoneIndex ?? undefined,
+          rootHash: row.rootHash ?? undefined,
+          chainTxHash: row.chainTxHash ?? undefined,
+          auditRootHash: row.auditRootHash ?? undefined,
+          auditTxHash: row.auditTxHash ?? undefined,
+          auditRecordedAt: row.auditRecordedAt
+            ? Number(row.auditRecordedAt)
+            : undefined,
+          auditProvider: row.auditProvider ?? undefined,
+          auditScore: row.auditScore ?? undefined,
         }),
       ),
     disputedBy: proposal.disputedBy ?? undefined,
@@ -179,6 +189,29 @@ export async function getProposal(
   ]);
 
   return toProposal({ proposal, votes: v, backers: b, milestones: m });
+}
+
+/**
+ * Looks a campaign up by its deployed contract address.
+ *
+ * The milestone routes are addressed by contract, not proposal id, and need the
+ * creator on record to reject a proof submitted by anyone else. Addresses are
+ * compared lowercased because they reach us from both wallets and the chain.
+ */
+export async function getProposalByContract(
+  contractAddress: string,
+  network: OgNetwork,
+): Promise<Proposal | null> {
+  const [row] = await db
+    .select({ id: proposals.id })
+    .from(proposals)
+    .where(
+      and(
+        sql`lower(${proposals.contractAddress}) = ${norm(contractAddress)}`,
+        eq(proposals.network, network),
+      ),
+    );
+  return row ? getProposal(row.id, network) : null;
 }
 
 const COVERS = [
@@ -384,6 +417,60 @@ export async function submitMilestone(
     submittedAt: Date.now(),
     status: "submitted",
   };
+}
+
+/**
+ * Mirrors a 0G Compute audit onto the milestone row.
+ *
+ * The scorecard itself stays on 0G Storage and the authoritative root stays on
+ * chain; this copy is what lets a campaign page list its milestones — index,
+ * proof root, audit root, score — without a chain read plus a Storage fetch per
+ * row. Addressed by contract + on-chain index because the evaluate route only
+ * knows the campaign by its deployed address.
+ *
+ * Returns false when no milestone row matches, which is normal: the first
+ * tranche is drawn with no proof, so nothing was ever inserted to update.
+ */
+export async function recordMilestoneAudit(
+  contractAddress: string,
+  milestoneIndex: number,
+  network: OgNetwork,
+  audit: {
+    auditRootHash: string;
+    auditTxHash?: string | null;
+    provider?: string | null;
+    overallScore?: number | null;
+  },
+): Promise<boolean> {
+  const campaign = await getProposalByContract(contractAddress, network);
+  if (!campaign) return false;
+
+  const [row] = await db
+    .select({ id: milestones.id })
+    .from(milestones)
+    .where(
+      and(
+        eq(milestones.proposalId, campaign.id),
+        eq(milestones.milestoneIndex, milestoneIndex),
+      ),
+    )
+    .orderBy(desc(milestones.submittedAt))
+    .limit(1);
+  if (!row) return false;
+
+  await db
+    .update(milestones)
+    .set({
+      auditRootHash: audit.auditRootHash,
+      auditTxHash: audit.auditTxHash ?? null,
+      auditRecordedAt: Date.now(),
+      auditProvider: audit.provider ?? null,
+      auditScore:
+        audit.overallScore == null ? null : Math.round(audit.overallScore),
+    })
+    .where(eq(milestones.id, row.id));
+
+  return true;
 }
 
 export async function reviewMilestone(

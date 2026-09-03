@@ -109,6 +109,17 @@ export async function POST(
 
       case "withdraw": {
         if (!isCreator) return deny("Only the creator can withdraw");
+        if (proposal.withdrawn) return deny("This tranche is already withdrawn");
+        // Mirrors SprkClubCollab: the first tranche needs a met goal and no
+        // proof at all (capped at the staked 20%); later tranches need a
+        // finalized milestone to have unpaused the contract.
+        if (proposal.milestones.length === 0) {
+          if (proposal.totalFunding < proposal.fundingGoal) {
+            return deny("The funding goal must be reached before the first tranche");
+          }
+        } else if (!proposal.milestones.some((m) => m.status === "approved")) {
+          return deny("A milestone must be finalized before the next tranche");
+        }
         await setWithdrawn(id);
         break;
       }

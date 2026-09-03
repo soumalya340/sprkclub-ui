@@ -46,6 +46,14 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
   const approved = proposal.milestones.some((m) => m.status === "approved");
   const stakeNeed = stakeAmount(proposal);
 
+  // Mirrors SprkClubCollab: `intiateProposalFunding` unpauses on a fully funded
+  // goal, so the first tranche is drawn with no proof at all — capped by
+  // `withdrawFunds` at the same 20% of the goal the creator staked. Only the
+  // tranches after it wait on a finalized milestone to unpause the contract.
+  const isFirstTranche = proposal.milestones.length === 0 && !proposal.withdrawn;
+  const trancheCap = stakeNeed;
+  const canWithdraw = !proposal.withdrawn && (isFirstTranche ? funded : approved);
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
       {proposal.status === "crowdfunding" && !proposal.staked ? (
@@ -84,19 +92,33 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
 
       {proposal.status === "active" || proposal.status === "completed" ? (
         isCreator ? (
-          <Button
-            disabled={!approved || proposal.withdrawn}
-            onClick={async () => {
-              const ok = await withdraw(proposal.id);
-              if (ok) toast.success("Funds withdrawn");
-            }}
-          >
-            {proposal.withdrawn ? "Funds withdrawn" : "Withdraw funds"}
-          </Button>
+          <>
+            <Button
+              disabled={!canWithdraw}
+              onClick={async () => {
+                const ok = await withdraw(proposal.id);
+                if (ok) toast.success("Funds withdrawn");
+              }}
+            >
+              {proposal.withdrawn
+                ? "Funds withdrawn"
+                : isFirstTranche
+                  ? `Withdraw first tranche · ${formatAmount(trancheCap, proposal.stablecoin)}`
+                  : "Withdraw funds"}
+            </Button>
+            {!proposal.withdrawn && isFirstTranche ? (
+              <p className="text-xs text-muted-foreground">
+                The first tranche needs no proof — it is capped at{" "}
+                {formatAmount(trancheCap, proposal.stablecoin)}, the 20% you
+                staked. Later tranches unlock once a milestone is finalized.
+              </p>
+            ) : null}
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Creator can withdraw the next tranche after a milestone is finalized
-            (or Alice wins a challenge).
+            The creator draws the first tranche (capped at the 20% they staked)
+            once the goal is met. Every later tranche waits on a finalized
+            milestone (or Alice winning a challenge).
           </p>
         )
       ) : null}

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getProposalByContract, norm } from "@/lib/db/queries";
+import { requireAddress } from "@/lib/server/auth";
 import { getNetwork } from "@/lib/server/network";
 import { isAddress, type Address } from "viem";
 import { readMilestoneProofs, submitMilestoneProof } from "@/lib/server/og-chain";
@@ -45,14 +47,39 @@ export async function POST(request: Request, { params }: RouteContext) {
   const network = await getNetwork();
 
   let file: File | null = null;
+  let caller: string;
   try {
     const form = await request.formData();
     const entry = form.get("file");
     if (entry instanceof File) file = entry;
-  } catch {
+    caller = requireAddress(form.get("address"));
+  } catch (error) {
     return NextResponse.json(
-      { error: "Expected a multipart/form-data body" },
+      {
+        error:
+          error instanceof Error && /wallet address/.test(error.message)
+            ? error.message
+            : "Expected a multipart/form-data body",
+      },
       { status: 400 },
+    );
+  }
+
+  // Only the campaign creator may submit a proof. The chain write below is
+  // signed by the server's relayer key, so `onlyProposalCreator` on-chain does
+  // not gate this caller — without this check anyone could push a proof (and a
+  // 0G Storage upload) onto someone else's campaign.
+  const campaign = await getProposalByContract(parsed.proposalAddr, network);
+  if (!campaign) {
+    return NextResponse.json(
+      { error: "No campaign found for this contract address" },
+      { status: 404 },
+    );
+  }
+  if (norm(campaign.creator) !== caller) {
+    return NextResponse.json(
+      { error: "Only the campaign creator can submit a milestone proof" },
+      { status: 403 },
     );
   }
 
