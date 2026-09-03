@@ -130,7 +130,7 @@ export async function readMilestoneAudit(
   network: OgNetwork,
 ): Promise<OnChainMilestoneView> {
   const publicClient = publicClientFor(network);
-  const [status, auditRootHash, auditRecordedAt, disputeBond] = await Promise.all([
+  const [status, auditRootHash, auditRecordedAt] = await Promise.all([
     publicClient.readContract({
       address: proposalAddr,
       abi: SprkClubCollabAbi,
@@ -149,12 +149,24 @@ export async function readMilestoneAudit(
       functionName: "auditRecordedAt",
       args: [BigInt(milestoneIndex)],
     }),
-    publicClient.readContract({
+  ]);
+
+  // `disputeBond` is absent from Collab builds predating the dispute escrow —
+  // notably the 0G mainnet deployment. It is only needed to open a challenge,
+  // so a missing getter degrades to 0n rather than failing the whole read.
+  let disputeBond = 0n;
+  try {
+    disputeBond = (await publicClient.readContract({
       address: proposalAddr,
       abi: SprkClubCollabAbi,
       functionName: "disputeBond",
-    }),
-  ]);
+    })) as bigint;
+  } catch {
+    console.warn(
+      `[og-chain] disputeBond() missing on ${proposalAddr} (${network}); ` +
+        "this Collab predates the dispute escrow. Challenges are unavailable.",
+    );
+  }
 
   return {
     status: Number(status),

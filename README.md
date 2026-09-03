@@ -209,6 +209,14 @@ instead.
 **2. Compute is advisory.** The scorecard helps challengers and voters. It never
 calls `finalize`. Fallback Mode is labeled when 0G Compute is unavailable.
 
+**3. The mainnet Collab predates the dispute escrow.** The contract at
+`0xD993C727250E5cA5D8863320B73FAEdCE55f3f61` is an older `SprkClubCollab` build:
+`disputeBond`, `stableCoin`, `accessMaster` and `fundingGoal` are absent from its
+bytecode and revert when called (`proposalCreator` / `numberOfMileStones` work).
+Reads degrade — `disputeBond` falls back to `0` — but **challenges cannot be
+opened on mainnet** until a current build is redeployed and the addresses in
+`src/lib/chain/chains.ts` are updated. Testnet (Galileo) has the full escrow.
+
 ## Environment
 
 Create `.env.local`:
