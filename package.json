@@ -11,7 +11,9 @@
     "abi:sync": "node scripts/sync-abi.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
-    "db:seed": "node --env-file=.env scripts/db-seed.mjs"
+    "db:seed": "node --env-file=.env scripts/db-seed.mjs",
+    "smoke:og-storage": "node --env-file=.env.local --import tsx --import ./scripts/smoke-register.mjs scripts/og-storage-smoke.mjs",
+    "smoke:og-compute": "node --env-file=.env.local --import tsx --import ./scripts/smoke-register.mjs scripts/og-compute-smoke.mjs"
   },
   "dependencies": {
     "@0gfoundation/0g-compute-ts-sdk": "0.9.0",
@@ -41,6 +43,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-hook-form": "^7.54.0",
+    "server-only": "0.0.1",
     "shadcn": "^4.19.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",

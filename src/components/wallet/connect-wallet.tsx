@@ -141,18 +141,17 @@ export function ConnectWallet({
         }
 
         if (!connected) {
+          // No network toggle while disconnected: connecting always lands on
+          // mainnet, and the toggle only appears once a wallet is attached.
           return (
-            <div className="flex items-center gap-2">
-              <NetworkToggle />
-              <Button
-                size={compact ? "sm" : "default"}
-                className={className}
-                onClick={openConnectModal}
-              >
-                <Wallet />
-                Connect wallet
-              </Button>
-            </div>
+            <Button
+              size={compact ? "sm" : "default"}
+              className={className}
+              onClick={openConnectModal}
+            >
+              <Wallet />
+              Connect wallet
+            </Button>
           );
         }
 

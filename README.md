@@ -11,7 +11,8 @@ Next.js App Router port of the dark Sprkclub demo UI (DAO + NFT proposals, votin
 - RainbowKit + WalletConnect (real wallet connection)
 - Radix UI + lucide-react + sonner
 - wagmi + viem (real wallet on 0G Chain)
-- `@0glabs/0g-ts-sdk` (0G Storage, server-side only)
+- `@0gfoundation/0g-storage-ts-sdk` (0G Storage, server-side only)
+- `@0gfoundation/0g-compute-ts-sdk` (0G Compute Direct path when Router key is unavailable)
 
 ## Getting started
 
@@ -199,15 +200,19 @@ Explorer: <https://chainscan-galileo.0g.ai>
 
 ## Known limitations — read this
 
-**1. 0G Storage uploads may degrade to root-only.**
-`@0glabs/0g-ts-sdk@0.3.3` can fail `Flow.submit` on the deployed Flow
-implementation (seen on Galileo; unverified on mainnet). The Merkle root is
-still computed locally and recorded on-chain; responses carry `degraded: true`
-and the UI badges **Degraded Storage**. Set `OG_STRICT_STORAGE=1` to fail hard
-instead.
+**1. Compute is advisory.** The scorecard helps challengers and voters. It never
+calls `finalize`. Evaluation prefers the 0G Compute Router
+(`OG_COMPUTE_API_KEY`); if that key is missing or rejected, the server falls
+back to the Direct broker path funded by `OG_PRIVATE_KEY`. **Fallback Mode**
+(heuristic scorecard, `provider: "fallback"`) is used only when both live paths
+fail — it is labeled plainly in the UI and never unlocks funds.
 
-**2. Compute is advisory.** The scorecard helps challengers and voters. It never
-calls `finalize`. Fallback Mode is labeled when 0G Compute is unavailable.
+**2. Residual Storage degradation is opt-in-strict.** Uploads use
+`@0gfoundation/0g-storage-ts-sdk` against the turbo indexer (mainnet Flow
+`0x62D4…c526`). Successful uploads return `degraded: false` with a storage tx
+hash. If a future Flow/submit incompatibility reappears, the module can still
+return a locally-computed root with `degraded: true` unless `OG_STRICT_STORAGE=1`
+is set.
 
 **3. The mainnet Collab predates the dispute escrow.** The contract at
 `0xD993C727250E5cA5D8863320B73FAEdCE55f3f61` is an older `SprkClubCollab` build:
@@ -227,10 +232,19 @@ OG_PRIVATE_KEY=<hex key, funded on 0G mainnet; server-side only, never NEXT_PUBL
 # the same key is creator+relayer, one key covers proof submit + audit root.
 NEXT_PUBLIC_OG_NETWORK=mainnet   # default; set to "testnet" for the legacy Galileo deploy
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<id>   # optional
-OG_COMPUTE_API_KEY=<0G Compute router key>  # optional — without it, Fallback Mode
+OG_COMPUTE_API_KEY=<0G Compute router key>  # preferred; Direct path used if rejected
 # OG_COMPUTE_BASE_URL=https://router-api.0g.ai/v1
 # OG_COMPUTE_MODEL=qwen3-vl-30b
+# OG_COMPUTE_PROVIDER=<optional Direct provider address>
 # OG_STRICT_STORAGE=1
+```
+
+Storage / Compute smokes (import the shipped server modules):
+
+```bash
+pnpm smoke:og-storage
+pnpm smoke:og-compute
+```
 ```
 
 Neon credentials (`DATABASE_URL` and friends) live in `.env`. Both files are

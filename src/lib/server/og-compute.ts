@@ -1,5 +1,6 @@
 import "server-only";
 
+import { ethers } from "ethers";
 import {
   ScorecardSchema,
   type EvaluateContext,
@@ -11,9 +12,13 @@ import {
   sanitizeEvidence,
 } from "@/lib/server/sanitize";
 import type { OgNetwork } from "@/lib/chain/chains";
-import { computeBaseUrl, computeModel } from "@/lib/chain/network";
+import { chainFor, computeBaseUrl, computeModel } from "@/lib/chain/network";
 
 const COMPUTE_TIMEOUT_MS = 90_000;
+/** Minimum 0G required to create a Direct ledger account. */
+const DIRECT_LEDGER_MIN_OG = 3;
+/** Preferred Direct deposit when creating/funding the ledger. */
+const DIRECT_LEDGER_DEPOSIT_OG = 3;
 
 function computeConfig(network: OgNetwork) {
   return {
@@ -158,7 +163,53 @@ function fallbackScorecard(ctx: EvaluateContext, reason: string): Scorecard {
   });
 }
 
-async function callOgCompute(
+function parseModelScorecard(
+  raw: string,
+  model: string,
+  flags: string[],
+): Scorecard {
+  const parsed = extractJsonObject(raw) as Record<string, unknown>;
+  const scorecard = ScorecardSchema.parse({
+    schemaVersion: 1,
+    provider: "0g-compute",
+    model,
+    overallScore: Number(parsed.overallScore ?? 0),
+    pass: Boolean(parsed.pass),
+    criteria: Array.isArray(parsed.criteria) ? parsed.criteria : [],
+    risks: [
+      ...(Array.isArray(parsed.risks) ? parsed.risks.map(String) : []),
+      ...(flags.length ? [`Pre-scan flags: ${flags.join(", ")}`] : []),
+    ],
+    summary: String(parsed.summary ?? ""),
+    evaluatedAt: new Date().toISOString(),
+  });
+
+  if (flags.length > 0 && scorecard.pass) {
+    return {
+      ...scorecard,
+      pass: false,
+      risks: [
+        ...scorecard.risks,
+        "Downgraded pass→fail because injection pre-scan fired.",
+      ],
+    };
+  }
+
+  return scorecard;
+}
+
+function isRouterKeyRejected(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    /OG_COMPUTE_API_KEY missing/i.test(message) ||
+    /invalid_api_key/i.test(message) ||
+    /Invalid API key/i.test(message) ||
+    /0G Compute HTTP 401/i.test(message) ||
+    /0G Compute HTTP 403/i.test(message)
+  );
+}
+
+async function callOgComputeRouter(
   ctx: EvaluateContext,
   network: OgNetwork,
 ): Promise<{ scorecard: Scorecard; raw: string }> {
@@ -201,38 +252,234 @@ async function callOgCompute(
     const raw = data.choices?.[0]?.message?.content ?? "";
     if (!raw) throw new Error("0G Compute returned empty content");
 
-    const parsed = extractJsonObject(raw) as Record<string, unknown>;
-    const scorecard = ScorecardSchema.parse({
-      schemaVersion: 1,
-      provider: "0g-compute",
-      model: data.model ?? model,
-      overallScore: Number(parsed.overallScore ?? 0),
-      pass: Boolean(parsed.pass),
-      criteria: Array.isArray(parsed.criteria) ? parsed.criteria : [],
-      risks: [
-        ...(Array.isArray(parsed.risks) ? parsed.risks.map(String) : []),
-        ...(flags.length ? [`Pre-scan flags: ${flags.join(", ")}`] : []),
-      ],
-      summary: String(parsed.summary ?? ""),
-      evaluatedAt: new Date().toISOString(),
+    return {
+      raw,
+      scorecard: parseModelScorecard(raw, data.model ?? model, flags),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+type DirectService = {
+  provider: string;
+  url: string;
+  model: string;
+  serviceType: string;
+  inputPrice: bigint;
+  outputPrice: bigint;
+};
+
+async function ensureDirectLedger(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  broker: any,
+  walletBalanceOg: number,
+): Promise<void> {
+  let missing = false;
+  try {
+    const ledger = await broker.ledger.getLedger();
+    const available = Number(ledger.availableBalance ?? 0n) / 1e18;
+    if (available >= 0.5) return;
+    if (walletBalanceOg < 1) {
+      throw new Error(
+        `Direct ledger available ${available.toFixed(4)} 0G and wallet too low to top up`,
+      );
+    }
+    const topUp = Math.min(
+      DIRECT_LEDGER_DEPOSIT_OG,
+      Math.floor(walletBalanceOg * 10) / 10,
+    );
+    if (topUp >= 1) {
+      console.warn(
+        `[og-compute] Direct ledger low (${available}); depositing ${topUp} 0G`,
+      );
+      await broker.ledger.depositFund(topUp);
+    }
+    return;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    missing = /Account does not exist|does not exist|not exist|no ledger|Ledger.*not/i.test(
+      message,
+    );
+    if (!missing) throw error;
+  }
+
+  if (walletBalanceOg < DIRECT_LEDGER_MIN_OG) {
+    throw new Error(
+      `Direct compute needs ≥${DIRECT_LEDGER_MIN_OG} 0G to create a ledger; wallet has ${walletBalanceOg.toFixed(4)} 0G`,
+    );
+  }
+  console.warn(
+    `[og-compute] Creating Direct ledger with ${DIRECT_LEDGER_DEPOSIT_OG} 0G`,
+  );
+  await broker.ledger.addLedger(DIRECT_LEDGER_DEPOSIT_OG);
+}
+
+function pickChatbotService(services: DirectService[]): DirectService {
+  const chatbots = services.filter((s) =>
+    /chatbot|chat|llm/i.test(s.serviceType || ""),
+  );
+  const pool = chatbots.length > 0 ? chatbots : services;
+  if (pool.length === 0) {
+    throw new Error("Direct compute: no inference providers listed");
+  }
+  // Prefer lower combined price; fall back to first.
+  return [...pool].sort((a, b) => {
+    const pa = a.inputPrice + a.outputPrice;
+    const pb = b.inputPrice + b.outputPrice;
+    if (pa === pb) return 0;
+    return pa < pb ? -1 : 1;
+  })[0]!;
+}
+
+async function callOgComputeDirect(
+  ctx: EvaluateContext,
+  network: OgNetwork,
+): Promise<{ scorecard: Scorecard; raw: string }> {
+  const privateKey = process.env.OG_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("OG_PRIVATE_KEY missing for Direct compute path");
+  }
+
+  const { createZGComputeNetworkBroker } = await import(
+    "@0gfoundation/0g-compute-ts-sdk"
+  );
+
+  const chain = chainFor(network);
+  const provider = new ethers.JsonRpcProvider(
+    chain.rpcUrls.default.http[0],
+    chain.id,
+  );
+  const wallet = new ethers.Wallet(privateKey, provider);
+  const balanceWei = await provider.getBalance(wallet.address);
+  const walletBalanceOg = Number(balanceWei) / 1e18;
+
+  const broker = await createZGComputeNetworkBroker(wallet);
+  await ensureDirectLedger(broker, walletBalanceOg);
+
+  const servicesRaw = await broker.inference.listService();
+  const services: DirectService[] = (
+    servicesRaw as Array<{
+      provider: string;
+      serviceType: string;
+      url: string;
+      inputPrice: bigint;
+      outputPrice: bigint;
+      model: string;
+    }>
+  ).map((s) => ({
+    provider: String(s.provider ?? ""),
+    serviceType: String(s.serviceType ?? ""),
+    url: String(s.url ?? ""),
+    inputPrice: BigInt(s.inputPrice ?? 0),
+    outputPrice: BigInt(s.outputPrice ?? 0),
+    model: String(s.model ?? ""),
+  }));
+
+  const preferredModel = process.env.OG_COMPUTE_MODEL;
+  const preferredProvider = process.env.OG_COMPUTE_PROVIDER;
+  let service =
+    (preferredProvider &&
+      services.find(
+        (s) => s.provider.toLowerCase() === preferredProvider.toLowerCase(),
+      )) ||
+    (preferredModel &&
+      services.find((s) =>
+        s.model.toLowerCase().includes(preferredModel.toLowerCase()),
+      )) ||
+    pickChatbotService(services);
+
+  if (!service.provider) {
+    throw new Error("Direct compute: selected service has empty provider address");
+  }
+
+  try {
+    await broker.inference.acknowledgeProviderSigner(service.provider);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Already acknowledged is fine.
+    if (!/already|acknowledged/i.test(message)) {
+      console.warn(`[og-compute] acknowledgeProviderSigner: ${message}`);
+    }
+  }
+
+  // Ensure provider sub-account has ≥1 0G when auto-fund may not have run yet.
+  try {
+    await broker.ledger.transferFund(
+      service.provider,
+      "inference",
+      BigInt(1) * BigInt(10 ** 18),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/insufficient|already|balance/i.test(message)) {
+      console.warn(`[og-compute] transferFund: ${message}`);
+    }
+  }
+
+  const { text, flags } = buildUserPrompt(ctx);
+  const { endpoint, model } = await broker.inference.getServiceMetadata(
+    service.provider,
+  );
+  const headers = await broker.inference.getRequestHeaders(service.provider);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), COMPUTE_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${endpoint}/chat/completions`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "content-type": "application/json",
+        ...headers,
+      },
+      body: JSON.stringify({
+        model: model || service.model,
+        temperature: 0.1,
+        messages: [
+          { role: "system", content: buildSystemPrompt(ctx) },
+          { role: "user", content: text },
+        ],
+      }),
     });
 
-    // Suspected injection never auto-passes.
-    if (flags.length > 0 && scorecard.pass) {
-      return {
-        raw,
-        scorecard: {
-          ...scorecard,
-          pass: false,
-          risks: [
-            ...scorecard.risks,
-            "Downgraded pass→fail because injection pre-scan fired.",
-          ],
-        },
-      };
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(
+        `0G Direct Compute HTTP ${res.status}: ${body.slice(0, 200)}`,
+      );
     }
 
-    return { scorecard, raw };
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      model?: string;
+      id?: string;
+    };
+    const raw = data.choices?.[0]?.message?.content ?? "";
+    if (!raw) throw new Error("0G Direct Compute returned empty content");
+
+    const chatID =
+      res.headers.get("ZG-Res-Key") ||
+      res.headers.get("zg-res-key") ||
+      data.id ||
+      undefined;
+    if (chatID) {
+      try {
+        await broker.inference.processResponse(service.provider, chatID);
+      } catch {
+        // Verification is optional; scoring still succeeds.
+      }
+    }
+
+    return {
+      raw,
+      scorecard: parseModelScorecard(
+        raw,
+        data.model ?? model ?? service.model ?? "0g-direct",
+        flags,
+      ),
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -241,16 +488,41 @@ async function callOgCompute(
 /**
  * Grades a milestone deliverable. Always returns a valid scorecard —
  * never leaves Alice stuck without an audit root path.
+ *
+ * Order: Router (OG_COMPUTE_API_KEY) → Direct broker (OG_PRIVATE_KEY) → Fallback.
  */
 export async function evaluateMilestone(
   ctx: EvaluateContext,
   network: OgNetwork,
 ): Promise<Scorecard> {
+  let routerError: unknown;
+
   try {
-    const { scorecard } = await callOgCompute(ctx, network);
+    const { scorecard } = await callOgComputeRouter(ctx, network);
     return scorecard;
   } catch (error) {
-    const reason = error instanceof Error ? error.message : "unknown error";
+    routerError = error;
+    if (!isRouterKeyRejected(error)) {
+      console.warn(
+        `[og-compute] Router failed, trying Direct: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    } else {
+      console.warn(
+        `[og-compute] Router key rejected/missing; trying Direct compute path`,
+      );
+    }
+  }
+
+  try {
+    const { scorecard } = await callOgComputeDirect(ctx, network);
+    return scorecard;
+  } catch (error) {
+    const directReason = error instanceof Error ? error.message : String(error);
+    const routerReason =
+      routerError instanceof Error ? routerError.message : String(routerError);
+    const reason = `router: ${routerReason}; direct: ${directReason}`;
     console.warn(`[og-compute] falling back: ${reason}`);
     return fallbackScorecard(ctx, reason);
   }

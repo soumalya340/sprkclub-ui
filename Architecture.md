@@ -83,9 +83,9 @@ Milestone panel shows:
 
 | Path | Role |
 | --- | --- |
-| `src/lib/server/og-storage.ts` | Upload / download via `@0glabs/0g-ts-sdk` Indexer; may return `degraded: true` |
+| `src/lib/server/og-storage.ts` | Upload / download via `@0gfoundation/0g-storage-ts-sdk` Indexer; `degraded: true` only on residual submit failures |
 | `src/lib/server/og-chain.ts` | Relayer signer: `submitMileStoneProof`, **`recordAuditRoot`** (new) |
-| `src/lib/server/og-compute.ts` | **NEW** — chat/completions against 0G Compute Serving Router; structured rubric prompt; fallback path |
+| `src/lib/server/og-compute.ts` | Router → Direct broker (`@0gfoundation/0g-compute-ts-sdk`) → heuristic Fallback Mode |
 
 ### API routes
 
