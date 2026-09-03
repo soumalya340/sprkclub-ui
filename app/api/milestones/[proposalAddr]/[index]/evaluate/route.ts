@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getNetwork } from "@/lib/server/network";
 import { isAddress, type Address } from "viem";
 import {
   readMilestoneAudit,
@@ -45,6 +46,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   if ("error" in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
+  const network = await getNetwork();
 
   let body: {
     proposalTitle?: string;
@@ -61,7 +63,11 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   let audit;
   try {
-    audit = await readMilestoneAudit(parsed.proposalAddr, parsed.milestoneIndex);
+    audit = await readMilestoneAudit(
+      parsed.proposalAddr,
+      parsed.milestoneIndex,
+      network,
+    );
   } catch (error) {
     return NextResponse.json(
       {
@@ -91,7 +97,11 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  const roots = await readMilestoneProofs(parsed.proposalAddr, parsed.milestoneIndex);
+  const roots = await readMilestoneProofs(
+    parsed.proposalAddr,
+    parsed.milestoneIndex,
+    network,
+  );
   const proofRoot =
     (body.proofRootHash && /^0x[0-9a-fA-F]{64}$/.test(body.proofRootHash)
       ? body.proofRootHash
@@ -102,7 +112,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   if (proofRoot) {
     try {
-      const bytes = await downloadFromStorage(proofRoot);
+      const bytes = await downloadFromStorage(proofRoot, network);
       proofText = extractProofText(bytes);
     } catch (error) {
       storageDegraded = true;
@@ -120,7 +130,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     milestoneAcceptance: body.milestoneAcceptance,
     proofText,
     proofRootHash: proofRoot ?? undefined,
-  });
+  }, network);
 
   const scorecardBytes = new TextEncoder().encode(
     JSON.stringify(scorecard, null, 2),
@@ -128,7 +138,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   let upload;
   try {
-    upload = await uploadToStorage(scorecardBytes);
+    upload = await uploadToStorage(scorecardBytes, network);
   } catch (error) {
     if (error instanceof StorageSubmitUnsupportedError) {
       // Still allow recording the locally-computed root so the clock can start.
@@ -156,6 +166,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       parsed.proposalAddr,
       parsed.milestoneIndex,
       upload.rootHash as `0x${string}`,
+      network,
     );
 
     return NextResponse.json({
@@ -190,15 +201,20 @@ export async function GET(_request: Request, { params }: RouteContext) {
   if ("error" in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
+  const network = await getNetwork();
 
   try {
-    const audit = await readMilestoneAudit(parsed.proposalAddr, parsed.milestoneIndex);
+    const audit = await readMilestoneAudit(
+      parsed.proposalAddr,
+      parsed.milestoneIndex,
+      network,
+    );
     let scorecard = null;
     const zero =
       "0x0000000000000000000000000000000000000000000000000000000000000000";
     if (audit.auditRootHash && audit.auditRootHash !== zero) {
       try {
-        const bytes = await downloadFromStorage(audit.auditRootHash);
+        const bytes = await downloadFromStorage(audit.auditRootHash, network);
         scorecard = JSON.parse(bytes.toString("utf8"));
       } catch {
         scorecard = null;

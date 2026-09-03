@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProposal } from "@/lib/db/queries";
+import { getNetwork } from "@/lib/server/network";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const proposal = await getProposal(id);
+    const proposal = await getProposal(id, await getNetwork());
     if (!proposal) {
       return NextResponse.json({ error: "Proposal not found" }, { status: 404 });
     }

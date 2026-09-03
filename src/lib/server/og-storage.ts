@@ -2,7 +2,8 @@ import "server-only";
 
 import { Indexer, MemData } from "@0glabs/0g-ts-sdk";
 import { ethers } from "ethers";
-import { activeChain, STORAGE_INDEXER_URL } from "@/lib/chain/config";
+import type { OgNetwork } from "@/lib/chain/chains";
+import { chainFor, storageIndexerUrl } from "@/lib/chain/network";
 
 /**
  * 0G Storage access. Node-only by design: the SDK's upload path signs transactions
@@ -51,31 +52,35 @@ export type UploadResult = {
  */
 const ALLOW_DEGRADED = process.env.OG_STRICT_STORAGE !== "1";
 
-function requireEnv(name: string): string {
+function requireEnv(name: string, chainName: string): string {
   const value = process.env[name];
   if (!value) {
     throw new Error(
-      `${name} is not set. 0G Storage uploads need a funded key on ${activeChain.name}.`,
+      `${name} is not set. 0G Storage uploads need a funded key on ${chainName}.`,
     );
   }
   return value;
 }
 
-function getSigner(): ethers.Wallet {
+function getSigner(network: OgNetwork): ethers.Wallet {
+  const chain = chainFor(network);
   const provider = new ethers.JsonRpcProvider(
-    activeChain.rpcUrls.default.http[0],
-    activeChain.id,
+    chain.rpcUrls.default.http[0],
+    chain.id,
   );
-  return new ethers.Wallet(requireEnv("OG_PRIVATE_KEY"), provider);
+  return new ethers.Wallet(requireEnv("OG_PRIVATE_KEY", chain.name), provider);
 }
 
 /**
  * Uploads bytes to 0G Storage and returns the Merkle root that addresses them.
  * 0G Storage is content-addressed — the root hash is the only handle on the file.
  */
-export async function uploadToStorage(bytes: Uint8Array): Promise<UploadResult> {
-  const indexer = new Indexer(STORAGE_INDEXER_URL);
-  const signer = getSigner();
+export async function uploadToStorage(
+  bytes: Uint8Array,
+  network: OgNetwork,
+): Promise<UploadResult> {
+  const indexer = new Indexer(storageIndexerUrl(network));
+  const signer = getSigner(network);
   const file = new MemData(bytes);
 
   const [tree, treeErr] = await file.merkleTree();
@@ -87,7 +92,7 @@ export async function uploadToStorage(bytes: Uint8Array): Promise<UploadResult> 
 
   const [res, uploadErr] = await indexer.upload(
     file,
-    activeChain.rpcUrls.default.http[0],
+    chainFor(network).rpcUrls.default.http[0],
     // The SDK's CommonJS build types `Signer` against its own bundled copy of
     // ethers, which is structurally identical but nominally distinct from the
     // ESM `Wallet` we construct here.
@@ -129,12 +134,15 @@ export async function uploadToStorage(bytes: Uint8Array): Promise<UploadResult> 
 }
 
 /** Downloads a stored file by root hash. Returns the raw bytes. */
-export async function downloadFromStorage(rootHash: string): Promise<Buffer> {
+export async function downloadFromStorage(
+  rootHash: string,
+  network: OgNetwork,
+): Promise<Buffer> {
   const { mkdtemp, readFile, rm } = await import("node:fs/promises");
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
 
-  const indexer = new Indexer(STORAGE_INDEXER_URL);
+  const indexer = new Indexer(storageIndexerUrl(network));
   const dir = await mkdtemp(join(tmpdir(), "og-proof-"));
   const outPath = join(dir, "proof.bin");
 

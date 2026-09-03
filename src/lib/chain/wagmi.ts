@@ -2,6 +2,7 @@ import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   injectedWallet,
   metaMaskWallet,
+  okxWallet,
   rabbyWallet,
   rainbowWallet,
   safeWallet,
@@ -36,6 +37,7 @@ const connectors = connectorsForWallets(
         injectedWallet,
         metaMaskWallet,
         rabbyWallet,
+        okxWallet,
         rainbowWallet,
         trustWallet,
         ...(hasProjectId ? [walletConnectWallet] : []),

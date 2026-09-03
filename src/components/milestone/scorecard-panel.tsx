@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { storageExplorerRoot } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import type { Scorecard } from "@/lib/scorecard";
 
 export function ScorecardPanel({
@@ -13,6 +13,7 @@ export function ScorecardPanel({
   auditRootHash?: string | null;
   degraded?: boolean;
 }) {
+  const { storageExplorerRoot } = useNetwork();
   if (!scorecard) {
     return (
       <p className="text-sm text-muted-foreground">

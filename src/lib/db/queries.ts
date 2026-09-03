@@ -16,7 +16,7 @@ import {
   PROPOSAL_VOTE_WINDOW_MS,
   DISCARDED_VISIBLE_MS,
 } from "@/lib/proposal-lifecycle";
-import { OG_NETWORK } from "@/lib/chain/config";
+import type { OgNetwork } from "@/lib/chain/chains";
 
 /** Addresses are stored lowercased so lookups never depend on checksum casing. */
 export const norm = (address: string) => address.trim().toLowerCase();
@@ -97,13 +97,20 @@ function toProposal({ proposal, votes: v, backers: b, milestones: m }: Rows): Pr
  * Flip expired voting ideas to discarded, then hard-delete discarded rows
  * past the 24h creator grace window.
  */
-export async function sweepProposalLifecycle(now = Date.now()): Promise<void> {
+export async function sweepProposalLifecycle(
+  network: OgNetwork,
+  now = Date.now(),
+): Promise<void> {
   const expireBefore = now - PROPOSAL_VOTE_WINDOW_MS;
   await db
     .update(proposals)
     .set({ status: "discarded", updatedAt: new Date() })
     .where(
-      and(eq(proposals.status, "voting"), lt(proposals.createdAt, expireBefore)),
+      and(
+        eq(proposals.network, network),
+        eq(proposals.status, "voting"),
+        lt(proposals.createdAt, expireBefore),
+      ),
     );
 
   const purgeBefore = now - PROPOSAL_VOTE_WINDOW_MS - DISCARDED_VISIBLE_MS;
@@ -111,6 +118,7 @@ export async function sweepProposalLifecycle(now = Date.now()): Promise<void> {
     .delete(proposals)
     .where(
       and(
+        eq(proposals.network, network),
         eq(proposals.status, "discarded"),
         lt(proposals.createdAt, purgeBefore),
       ),
@@ -118,11 +126,11 @@ export async function sweepProposalLifecycle(now = Date.now()): Promise<void> {
 }
 
 /** Every proposal with its votes, backers and milestones joined in. */
-export async function listProposals(): Promise<Proposal[]> {
-  await sweepProposalLifecycle();
+export async function listProposals(network: OgNetwork): Promise<Proposal[]> {
+  await sweepProposalLifecycle(network);
 
   const [p, v, b, m] = await Promise.all([
-    db.select().from(proposals),
+    db.select().from(proposals).where(eq(proposals.network, network)),
     db.select().from(votes),
     db.select().from(backers),
     db.select().from(milestones),
@@ -154,8 +162,14 @@ export async function listProposals(): Promise<Proposal[]> {
     .sort((a, z) => z.createdAt - a.createdAt);
 }
 
-export async function getProposal(id: string): Promise<Proposal | null> {
-  const [proposal] = await db.select().from(proposals).where(eq(proposals.id, id));
+export async function getProposal(
+  id: string,
+  network: OgNetwork,
+): Promise<Proposal | null> {
+  const [proposal] = await db
+    .select()
+    .from(proposals)
+    .where(and(eq(proposals.id, id), eq(proposals.network, network)));
   if (!proposal) return null;
 
   const [v, b, m] = await Promise.all([
@@ -185,6 +199,7 @@ function pickCover(title: string): string {
 export async function createProposal(
   input: CreateProposalInput,
   creator: string,
+  network: OgNetwork,
 ): Promise<Proposal> {
   const id = `prop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const createdAt = Date.now();
@@ -206,14 +221,14 @@ export async function createProposal(
     createdAt,
     status: "voting",
     stablecoin: "SPRK",
-    network: OG_NETWORK,
+    network,
     projectTwitter: input.projectTwitter || null,
     creatorTwitter: input.creatorTwitter || null,
     projectInstagram: input.projectInstagram || null,
     creatorInstagram: input.creatorInstagram || null,
   });
 
-  return (await getProposal(id))!;
+  return (await getProposal(id, network))!;
 }
 
 /**
@@ -268,8 +283,12 @@ export async function setStaked(proposalId: string) {
 }
 
 /** Records a mint and advances funding; flips to "active" once the goal is met. */
-export async function recordMint(proposalId: string, address: string) {
-  const proposal = await getProposal(proposalId);
+export async function recordMint(
+  proposalId: string,
+  address: string,
+  network: OgNetwork,
+) {
+  const proposal = await getProposal(proposalId, network);
   if (!proposal) throw new Error("Proposal not found");
 
   const buyer = norm(address);

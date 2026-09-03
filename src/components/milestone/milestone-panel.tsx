@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { DisputePanel } from "@/components/milestone/dispute-panel";
 import { ScorecardPanel } from "@/components/milestone/scorecard-panel";
 import { formatDate } from "@/lib/format";
-import { contracts, MilestoneStatusOnChain } from "@/lib/chain/config";
+import { MilestoneStatusOnChain } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import {
   useAuditRoot,
   useProposalState,
@@ -36,6 +37,7 @@ function LocationTag({ children }: { children: React.ReactNode }) {
 }
 
 export function MilestonePanel({ proposal }: { proposal: Proposal }) {
+  const { contracts } = useNetwork();
   const address = useAddress();
   const submitMilestone = useSprkStore((s) => s.submitMilestone);
   const [title, setTitle] = useState("");

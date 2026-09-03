@@ -10,23 +10,19 @@ import {
   EVIDENCE_FENCE_END,
   sanitizeEvidence,
 } from "@/lib/server/sanitize";
-import { OG_NETWORK } from "@/lib/chain/config";
-
-const DEFAULT_BASE =
-  OG_NETWORK === "mainnet"
-    ? "https://router-api.0g.ai/v1"
-    : "https://router-api-testnet.integratenetwork.work/v1";
-
-const DEFAULT_MODEL =
-  OG_NETWORK === "mainnet" ? "qwen3-vl-30b" : "qwen2.5-omni";
+import type { OgNetwork } from "@/lib/chain/chains";
+import { computeBaseUrl, computeModel } from "@/lib/chain/network";
 
 const COMPUTE_TIMEOUT_MS = 90_000;
 
-function computeConfig() {
+function computeConfig(network: OgNetwork) {
   return {
-    baseUrl: (process.env.OG_COMPUTE_BASE_URL ?? DEFAULT_BASE).replace(/\/$/, ""),
+    baseUrl: (process.env.OG_COMPUTE_BASE_URL ?? computeBaseUrl(network)).replace(
+      /\/$/,
+      "",
+    ),
     apiKey: process.env.OG_COMPUTE_API_KEY ?? "",
-    model: process.env.OG_COMPUTE_MODEL ?? DEFAULT_MODEL,
+    model: process.env.OG_COMPUTE_MODEL ?? computeModel(network),
   };
 }
 
@@ -164,8 +160,9 @@ function fallbackScorecard(ctx: EvaluateContext, reason: string): Scorecard {
 
 async function callOgCompute(
   ctx: EvaluateContext,
+  network: OgNetwork,
 ): Promise<{ scorecard: Scorecard; raw: string }> {
-  const { baseUrl, apiKey, model } = computeConfig();
+  const { baseUrl, apiKey, model } = computeConfig(network);
   if (!apiKey) {
     throw new Error("OG_COMPUTE_API_KEY missing");
   }
@@ -245,9 +242,12 @@ async function callOgCompute(
  * Grades a milestone deliverable. Always returns a valid scorecard —
  * never leaves Alice stuck without an audit root path.
  */
-export async function evaluateMilestone(ctx: EvaluateContext): Promise<Scorecard> {
+export async function evaluateMilestone(
+  ctx: EvaluateContext,
+  network: OgNetwork,
+): Promise<Scorecard> {
   try {
-    const { scorecard } = await callOgCompute(ctx);
+    const { scorecard } = await callOgCompute(ctx, network);
     return scorecard;
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown error";

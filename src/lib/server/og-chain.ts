@@ -3,18 +3,28 @@ import "server-only";
 import { createPublicClient, createWalletClient, http, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { SprkClubCollabAbi } from "@/lib/chain/abi/SprkClubCollab";
-import { activeChain } from "@/lib/chain/config";
+import type { OgNetwork } from "@/lib/chain/chains";
+import { chainFor } from "@/lib/chain/network";
 
 /**
  * Server-side chain writes for the proof / audit trail.
  * Relayer signs `submitMileStoneProof` (creator key in practice today) and
  * `recordAuditRoot` (must be the on-chain `relayer`). Dispute txs stay in the wallet.
+ *
+ * Every entry point takes the network explicitly: a request that resolved to
+ * testnet must never reach a mainnet contract, so there is no ambient "current
+ * chain" client here to accidentally close over.
  */
 
-export const publicClient = createPublicClient({
-  chain: activeChain,
-  transport: http(),
-});
+const clients = new Map<OgNetwork, ReturnType<typeof createPublicClient>>();
+
+export function publicClientFor(network: OgNetwork) {
+  const cached = clients.get(network);
+  if (cached) return cached;
+  const client = createPublicClient({ chain: chainFor(network), transport: http() });
+  clients.set(network, client);
+  return client;
+}
 
 function getAccount() {
   const key = process.env.OG_PRIVATE_KEY;
@@ -31,17 +41,18 @@ function getAccount() {
 export async function submitMilestoneProof(
   proposalAddr: Address,
   rootHash: `0x${string}`,
+  network: OgNetwork,
 ): Promise<`0x${string}`> {
   const account = getAccount();
   const wallet = createWalletClient({
     account,
-    chain: activeChain,
+    chain: chainFor(network),
     transport: http(),
   });
 
   // Simulate first so a revert surfaces as a readable error instead of a
   // silently-failing transaction the user pays for.
-  const { request } = await publicClient.simulateContract({
+  const { request } = await publicClientFor(network).simulateContract({
     account,
     address: proposalAddr,
     abi: SprkClubCollabAbi,
@@ -56,6 +67,7 @@ export async function submitMilestoneProof(
 export async function readMilestoneProofs(
   proposalAddr: Address,
   milestoneIndex: number,
+  network: OgNetwork,
 ): Promise<`0x${string}`[]> {
   const roots: `0x${string}`[] = [];
   // `milestoneProofRoots` is a mapping to a dynamic array; the generated getter
@@ -63,7 +75,7 @@ export async function readMilestoneProofs(
   // learn the length.
   for (let i = 0; i < 64; i++) {
     try {
-      const root = (await publicClient.readContract({
+      const root = (await publicClientFor(network).readContract({
         address: proposalAddr,
         abi: SprkClubCollabAbi,
         functionName: "milestoneProofRoots",
@@ -85,15 +97,16 @@ export async function recordAuditRoot(
   proposalAddr: Address,
   milestoneIndex: number,
   rootHash: `0x${string}`,
+  network: OgNetwork,
 ): Promise<`0x${string}`> {
   const account = getAccount();
   const wallet = createWalletClient({
     account,
-    chain: activeChain,
+    chain: chainFor(network),
     transport: http(),
   });
 
-  const { request } = await publicClient.simulateContract({
+  const { request } = await publicClientFor(network).simulateContract({
     account,
     address: proposalAddr,
     abi: SprkClubCollabAbi,
@@ -114,7 +127,9 @@ export type OnChainMilestoneView = {
 export async function readMilestoneAudit(
   proposalAddr: Address,
   milestoneIndex: number,
+  network: OgNetwork,
 ): Promise<OnChainMilestoneView> {
+  const publicClient = publicClientFor(network);
   const [status, auditRootHash, auditRecordedAt, disputeBond] = await Promise.all([
     publicClient.readContract({
       address: proposalAddr,

@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { createProposal, listProposals } from "@/lib/db/queries";
 import { normalizeHandle } from "@/lib/format";
 import { requireAddress } from "@/lib/server/auth";
+import { getNetwork } from "@/lib/server/network";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    return NextResponse.json({ proposals: await listProposals() });
+    const network = await getNetwork();
+    return NextResponse.json({ proposals: await listProposals(network) });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to load proposals" },
@@ -21,6 +23,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const creator = requireAddress(body.address);
+    const network = await getNetwork();
 
     const {
       title,
@@ -75,6 +78,7 @@ export async function POST(request: Request) {
         creatorInstagram: asHandle(creatorInstagram),
       },
       creator,
+      network,
     );
     return NextResponse.json({ proposal }, { status: 201 });
   } catch (error) {

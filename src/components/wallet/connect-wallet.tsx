@@ -22,36 +22,53 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { activeChain, explorerAddress, ogMainnet, ogTestnet } from "@/lib/chain/config";
+import { ogMainnet, ogTestnet, type OgNetwork } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import { truncateAddress } from "@/lib/format";
 import { useSprkStore } from "@/lib/sprk-store";
 
 /**
- * Wallet-side network toggle. Only switches which chain the connected wallet
- * talks to — the app's contracts/API always stay pinned to `activeChain`
- * (chain/config.ts). Switching away from that chain means writes (stake,
- * mint, vote, dispute) will fail or target the wrong deployment.
+ * Switches the whole app between 0G testnet and mainnet: the wallet's chain,
+ * and — through the cookie `setNetwork` writes — the contracts, proposals,
+ * storage and compute the server resolves for every later request.
+ *
+ * The wallet switch is attempted first. If the user rejects it in their wallet,
+ * the app network is left alone so the two cannot drift apart.
  */
-function NetworkToggle({ currentChainId }: { currentChainId: number }) {
-  const { switchChain, isPending } = useSwitchChain();
+function NetworkToggle() {
+  const { network, setNetwork } = useNetwork();
+  const { switchChainAsync, isPending } = useSwitchChain();
+
+  async function select(next: OgNetwork) {
+    if (next === network) return;
+    const target = next === "mainnet" ? ogMainnet : ogTestnet;
+    try {
+      await switchChainAsync({ chainId: target.id });
+    } catch {
+      toast.error(`Keep the wallet on ${target.name} to switch the app to it.`);
+      return;
+    }
+    // Persists the choice and reloads so server-rendered data follows.
+    setNetwork(next);
+  }
 
   return (
     <div className="flex items-center gap-1 rounded-md bg-secondary/60 p-0.5">
-      {[ogMainnet, ogTestnet].map((c) => {
-        const isActive = currentChainId === c.id;
+      {(["mainnet", "testnet"] as const).map((option) => {
+        const isActive = network === option;
         return (
           <button
-            key={c.id}
+            key={option}
             type="button"
             disabled={isPending || isActive}
-            onClick={() => switchChain({ chainId: c.id })}
-            className={`flex-1 rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-default ${
+            onClick={() => void select(option)}
+            className={`flex-1 rounded px-2 py-1 text-xs font-medium capitalize transition-colors disabled:cursor-default ${
               isActive
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {c.testnet ? "Testnet" : "Mainnet"}
+            {option}
           </button>
         );
       })}
@@ -72,6 +89,7 @@ export function ConnectWallet({
   className?: string;
 }) {
   const { disconnect } = useDisconnect();
+  const { chain: appChain, explorerAddress } = useNetwork();
   const proposals = useSprkStore((s) => s.proposals);
 
   return (
@@ -125,7 +143,7 @@ export function ConnectWallet({
           );
         }
 
-        const onActiveChain = chain.id === activeChain.id;
+        const onActiveChain = chain.id === appChain.id;
         const addr = account.address.toLowerCase();
         const backedCount = proposals.filter((p) =>
           p.backers.some((b) => b.address.toLowerCase() === addr),
@@ -164,13 +182,13 @@ export function ConnectWallet({
                   {truncateAddress(account.address, 6)}
                 </p>
                 <div className="mt-2.5">
-                  <NetworkToggle currentChainId={chain.id} />
+                  <NetworkToggle />
                 </div>
                 {!onActiveChain ? (
                   <p className="mt-2 flex items-start gap-1.5 text-xs text-warn">
                     <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                    The app runs on {activeChain.name}. Actions like stake,
-                    mint, and vote need the wallet on {activeChain.name} too.
+                    The app runs on {appChain.name}. Switch the wallet back to
+                    it, or use the toggle to move the whole app.
                   </p>
                 ) : null}
               </div>

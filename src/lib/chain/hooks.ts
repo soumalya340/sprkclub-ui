@@ -16,9 +16,8 @@ import { MyTokenAbi } from "@/lib/chain/abi/MyToken";
 import {
   DISPUTE_WINDOW_SECONDS,
   MilestoneStatusOnChain,
-  activeChain,
-  contracts,
 } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import { wagmiConfig } from "@/lib/chain/wagmi";
 import type { Scorecard } from "@/lib/scorecard";
 
@@ -71,8 +70,9 @@ export function useProposalState(address: Address | undefined) {
 
 /** Proof roots recorded on-chain for a milestone index (via API). */
 export function useMilestoneProofs(address: Address | undefined, milestoneIndex = 0) {
+  const { chain } = useNetwork();
   return useQuery({
-    queryKey: ["milestone-proofs", activeChain.id, address, milestoneIndex],
+    queryKey: ["milestone-proofs", chain.id, address, milestoneIndex],
     enabled: Boolean(address),
     refetchInterval: 20_000,
     queryFn: async (): Promise<string[]> => {
@@ -206,8 +206,9 @@ export type EvaluateResponse = {
 };
 
 export function useScorecard(address: Address | undefined, milestoneIndex = 0) {
+  const { chain } = useNetwork();
   return useQuery({
-    queryKey: ["milestone-scorecard", activeChain.id, address, milestoneIndex],
+    queryKey: ["milestone-scorecard", chain.id, address, milestoneIndex],
     enabled: Boolean(address),
     refetchInterval: 20_000,
     queryFn: async (): Promise<{
@@ -257,6 +258,7 @@ function useTxHelpers() {
 
 /** Approve SprkCoin + challenge(milestoneIndex). */
 export function useChallenge(collab: Address | undefined, milestoneIndex = 0) {
+  const { contracts } = useNetwork();
   const { writeContractAsync, hash, isPending, error, receipt } = useTxHelpers();
   const { data: bond } = useReadContract({
     address: collab,

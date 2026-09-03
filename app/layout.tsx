@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { getNetwork } from "@/lib/server/network";
 
 // Typography roles are documented in brand.md.
 const geist = Geist({
@@ -30,11 +31,15 @@ export const metadata: Metadata = {
   description: "A DAO + NFT where people make their dreams real.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Resolved on the server so the first paint already matches the chosen
+  // network — no flash of the wrong chain's data on load.
+  const network = await getNetwork();
+
   return (
     <html
       lang="en"
@@ -47,7 +52,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <Providers>
+        <Providers initialNetwork={network}>
           <AppShell>{children}</AppShell>
         </Providers>
       </body>

@@ -1,5 +1,11 @@
 // Seeds Neon with the demo proposals from src/lib/seed.ts.
 // Safe to re-run: existing proposal ids are skipped, so live data is preserved.
+//
+// Rows are seeded onto one network at a time. Pass the network as the first
+// argument (default "testnet") — ids are suffixed per network so the same demo
+// set can exist on both without colliding:
+//   node scripts/db-seed.mjs testnet
+//   node scripts/db-seed.mjs mainnet
 import { neon } from "@neondatabase/serverless";
 import { readFileSync } from "node:fs";
 
@@ -22,10 +28,18 @@ const proposals = new Function(
   `return ${literal.replace(/\s*as\s+\w+/g, "")}`,
 )(...Object.values(consts), T);
 
+const network = process.argv[2] ?? "testnet";
+if (network !== "testnet" && network !== "mainnet") {
+  throw new Error(`Unknown network "${network}" — use "testnet" or "mainnet"`);
+}
+
 const lower = (a) => String(a).toLowerCase();
+// Mainnet copies get a suffixed id so both networks can hold the demo set.
+const idFor = (id) => (network === "testnet" ? id : `${id}-${network}`);
 let inserted = 0;
 
-for (const p of proposals) {
+for (const raw of proposals) {
+  const p = { ...raw, id: idFor(raw.id) };
   const existing = await sql`select id from proposals where id = ${p.id}`;
   if (existing.length) continue;
 
@@ -41,7 +55,7 @@ for (const p of proposals) {
       ${p.createdAt}, ${p.status}, ${p.stablecoin}, ${p.startDate ?? null},
       ${p.endDate ?? null}, ${p.staked}, ${p.totalFunding}, ${p.mintedCount},
       ${p.withdrawn}, ${p.disputedBy ? lower(p.disputedBy) : null},
-      ${p.disputeReason ?? null}, ${p.network ?? "testnet"}
+      ${p.disputeReason ?? null}, ${network}
     )`;
 
   for (const [voter, kind] of Object.entries(p.voters ?? {})) {
@@ -56,12 +70,13 @@ for (const p of proposals) {
   }
   for (const m of p.milestones ?? []) {
     await sql`insert into milestones (id, proposal_id, title, description, proof, status, submitted_at, reviewed_at)
-              values (${m.id}, ${p.id}, ${m.title}, ${m.description}, ${m.proof},
+              values (${idFor(m.id)}, ${p.id}, ${m.title}, ${m.description}, ${m.proof},
                       ${m.status}, ${m.submittedAt}, ${m.reviewedAt ?? null})
               on conflict do nothing`;
   }
   inserted++;
 }
 
-const [{ count }] = await sql`select count(*)::int as count from proposals`;
-console.log(`seeded ${inserted} new proposal(s); ${count} total in Neon`);
+const [{ count }] = await sql`
+  select count(*)::int as count from proposals where network = ${network}`;
+console.log(`seeded ${inserted} new proposal(s) on ${network}; ${count} total there`);

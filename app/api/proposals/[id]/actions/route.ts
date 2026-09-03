@@ -18,6 +18,7 @@ import {
   MIN_SPRK_TO_VOTE,
 } from "@/lib/proposal-lifecycle";
 import { requireAddress } from "@/lib/server/auth";
+import { getNetwork } from "@/lib/server/network";
 import { getSprkBalance } from "@/lib/server/sprk-balance";
 
 export const runtime = "nodejs";
@@ -37,8 +38,9 @@ export async function POST(
   try {
     const body = await request.json();
     const address = requireAddress(body.address);
+    const network = await getNetwork();
 
-    const proposal = await getProposal(id);
+    const proposal = await getProposal(id, network);
     if (!proposal) {
       return NextResponse.json({ error: "Proposal not found" }, { status: 404 });
     }
@@ -54,8 +56,8 @@ export async function POST(
         }
         if (isCreator) return deny("A creator cannot vote on their own proposal");
 
-        await sweepProposalLifecycle();
-        const fresh = (await getProposal(id)) ?? proposal;
+        await sweepProposalLifecycle(network);
+        const fresh = (await getProposal(id, network)) ?? proposal;
         if (fresh.status === "discarded" || isVoteWindowExpired(fresh)) {
           return deny("This proposal expired and was discarded");
         }
@@ -63,7 +65,7 @@ export async function POST(
           return deny("Voting has closed for this proposal");
         }
 
-        const balance = await getSprkBalance(address);
+        const balance = await getSprkBalance(address, network);
         if (balance != null && !canVoteWithBalance(balance)) {
           return deny(
             `Hold more than ${MIN_SPRK_TO_VOTE} SPRK to vote (you have ${Math.floor(balance)})`,
@@ -101,7 +103,7 @@ export async function POST(
         if (proposal.status !== "crowdfunding") {
           return deny("This event is not accepting mints");
         }
-        await recordMint(id, address);
+        await recordMint(id, address, network);
         break;
       }
 
@@ -152,7 +154,7 @@ export async function POST(
         return NextResponse.json({ error: "Unknown action" }, { status: 400 });
     }
 
-    return NextResponse.json({ proposal: await getProposal(id) });
+    return NextResponse.json({ proposal: await getProposal(id, network) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Action failed";
     return NextResponse.json({ error: message }, { status: 400 });

@@ -18,11 +18,12 @@ import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import type { Proposal } from "@/lib/types";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { MyTokenAbi } from "@/lib/chain/abi/MyToken";
-import { contracts } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export function VotePanel({ proposal }: { proposal: Proposal }) {
+  const { contracts } = useNetwork();
   const address = useAddress();
   const { address: wagmiAddress } = useAccount();
   const vote = useSprkStore((s) => s.vote);

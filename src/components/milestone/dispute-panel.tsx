@@ -6,10 +6,8 @@ import type { Address } from "viem";
 import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  MilestoneStatusOnChain,
-  explorerTx,
-} from "@/lib/chain/config";
+import { MilestoneStatusOnChain } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import {
   useChallenge,
   useCollabTicketBalance,
@@ -39,6 +37,7 @@ export function DisputePanel({
   collab: Address;
   milestoneIndex: number;
 }) {
+  const { explorerTx } = useNetwork();
   const dispute = useDisputeState(collab, milestoneIndex);
   const { data: ticketBalance } = useCollabTicketBalance(collab);
   const { data: voted } = useHasVoted(collab, milestoneIndex);

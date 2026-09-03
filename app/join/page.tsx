@@ -16,7 +16,7 @@ import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MyTokenAbi } from "@/lib/chain/abi/MyToken";
-import { activeChain, contracts, explorerAddress, explorerTx, isDeployed } from "@/lib/chain/config";
+import { useNetwork } from "@/lib/chain/network-context";
 import { truncateAddress } from "@/lib/format";
 
 /** Contract rate: 1 native 0G minted → 100 SprkCoin (SprkCoin.sol `mint()`: `_mint(msg.sender, msg.value * 100)`). */
@@ -37,6 +37,13 @@ function parseAmount(raw: string): number | null {
  * (mainnet/testnet) follows `activeChain` from chain/config.ts.
  */
 export default function JoinPage() {
+  const {
+    chain: activeChain,
+    contracts,
+    isDeployed,
+    explorerAddress,
+    explorerTx,
+  } = useNetwork();
   const inputId = useId();
   const { address, isConnected, chainId } = useAccount();
   const [amount, setAmount] = useState("0.01");

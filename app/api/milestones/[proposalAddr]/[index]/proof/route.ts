@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getNetwork } from "@/lib/server/network";
 import { isAddress, type Address } from "viem";
 import { readMilestoneProofs, submitMilestoneProof } from "@/lib/server/og-chain";
 import {
@@ -41,6 +42,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   if ("error" in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
+  const network = await getNetwork();
 
   let file: File | null = null;
   try {
@@ -68,7 +70,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   let upload;
   try {
-    upload = await uploadToStorage(bytes);
+    upload = await uploadToStorage(bytes, network);
   } catch (error) {
     if (error instanceof StorageSubmitUnsupportedError) {
       return NextResponse.json(
@@ -90,6 +92,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const chainTxHash = await submitMilestoneProof(
       parsed.proposalAddr,
       upload.rootHash as `0x${string}`,
+      network,
     );
     return NextResponse.json({
       rootHash: upload.rootHash,
@@ -123,7 +126,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   try {
-    const roots = await readMilestoneProofs(parsed.proposalAddr, parsed.milestoneIndex);
+    const roots = await readMilestoneProofs(
+      parsed.proposalAddr,
+      parsed.milestoneIndex,
+      await getNetwork(),
+    );
     return NextResponse.json({ roots });
   } catch (error) {
     return NextResponse.json(

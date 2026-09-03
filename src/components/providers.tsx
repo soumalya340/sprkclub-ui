@@ -9,7 +9,9 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { WagmiProvider } from "wagmi";
-import { activeChain } from "@/lib/chain/config";
+import type { OgNetwork } from "@/lib/chain/chains";
+import { chainFor } from "@/lib/chain/network";
+import { NetworkProvider } from "@/lib/chain/network-context";
 import { wagmiConfig } from "@/lib/chain/wagmi";
 
 // Match the app's sand palette (hue 286.25) rather than RainbowKit's default blue.
@@ -26,7 +28,13 @@ const theme: Theme = {
   },
 };
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  initialNetwork,
+  children,
+}: {
+  initialNetwork: OgNetwork;
+  children: React.ReactNode;
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -37,8 +45,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={theme} initialChain={activeChain} modalSize="compact">
-          {children}
+        <RainbowKitProvider
+          theme={theme}
+          initialChain={chainFor(initialNetwork)}
+          modalSize="compact"
+        >
+          <NetworkProvider initialNetwork={initialNetwork}>
+            {children}
+          </NetworkProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

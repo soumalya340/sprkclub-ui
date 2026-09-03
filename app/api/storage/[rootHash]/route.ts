@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getNetwork } from "@/lib/server/network";
 import { downloadFromStorage } from "@/lib/server/og-storage";
 
 // The 0G download path writes to the filesystem, so it is Node-only.
@@ -18,7 +19,7 @@ export async function GET(
   }
 
   try {
-    const bytes = await downloadFromStorage(rootHash);
+    const bytes = await downloadFromStorage(rootHash, await getNetwork());
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "content-type": "application/octet-stream",
