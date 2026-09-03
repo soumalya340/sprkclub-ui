@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Indexer, MemData } from "@0glabs/0g-ts-sdk";
+import { Indexer, MemData } from "@0gfoundation/0g-storage-ts-sdk";
 import { ethers } from "ethers";
 import type { OgNetwork } from "@/lib/chain/chains";
 import { chainFor, storageIndexerUrl } from "@/lib/chain/network";
@@ -38,9 +38,9 @@ export type UploadResult = {
   alreadyStored: boolean;
   /**
    * True when the Merkle root was computed locally but the bytes could not be
-   * pushed to a storage node because of {@link StorageSubmitUnsupportedError}.
-   * The proof trail on-chain is still valid and verifiable; only retrieval of
-   * the original file from 0G Storage is unavailable.
+   * pushed to a storage node (e.g. Flow submit revert). Callers may still
+   * record the root on-chain; retrieval from 0G Storage is unavailable until
+   * a successful upload lands.
    */
   degraded: boolean;
 };
@@ -48,7 +48,7 @@ export type UploadResult = {
 /**
  * When true, an upload whose `submit` transaction is rejected still returns its
  * locally-computed Merkle root so the on-chain proof trail can proceed. Set
- * OG_STRICT_STORAGE=1 to make that a hard failure once the SDK is fixed.
+ * OG_STRICT_STORAGE=1 to make that a hard failure.
  */
 const ALLOW_DEGRADED = process.env.OG_STRICT_STORAGE !== "1";
 
@@ -69,6 +69,37 @@ function getSigner(network: OgNetwork): ethers.Wallet {
     chain.id,
   );
   return new ethers.Wallet(requireEnv("OG_PRIVATE_KEY", chain.name), provider);
+}
+
+function pickTxHash(
+  res:
+    | { txHash: string; rootHash: string; txSeq: number }
+    | { txHashes: string[]; rootHashes: string[]; txSeqs: number[] }
+    | null
+    | undefined,
+): string {
+  if (!res) return "";
+  if ("txHash" in res) return res.txHash ?? "";
+  if ("txHashes" in res && Array.isArray(res.txHashes)) {
+    return res.txHashes[0] ?? "";
+  }
+  return "";
+}
+
+function pickRootHash(
+  res:
+    | { txHash: string; rootHash: string; txSeq: number }
+    | { txHashes: string[]; rootHashes: string[]; txSeqs: number[] }
+    | null
+    | undefined,
+  fallback: string,
+): string {
+  if (!res) return fallback;
+  if ("rootHash" in res && res.rootHash) return res.rootHash;
+  if ("rootHashes" in res && Array.isArray(res.rootHashes) && res.rootHashes[0]) {
+    return res.rootHashes[0];
+  }
+  return fallback;
 }
 
 /**
@@ -108,11 +139,8 @@ export async function uploadToStorage(
       return { rootHash, storageTxHash: "", alreadyStored: true, degraded: false };
     }
 
-    // Known upstream incompatibility: @0glabs/0g-ts-sdk@0.3.3 encodes
-    // `submit((uint256,bytes,(bytes32,uint256)[]))` (selector 0xef3e12dc), which
-    // is absent from the Flow implementation currently deployed on Galileo
-    // (0x22E03a…5296 → impl 0xF99ccc…292F). Every submit reverts at any msg.value.
-    // Surface that plainly instead of as an opaque `require(false)`.
+    // Residual Flow/submit failures: keep a degraded root so the on-chain proof
+    // trail can proceed unless OG_STRICT_STORAGE=1.
     if (/execution reverted/i.test(message)) {
       if (!ALLOW_DEGRADED) throw new StorageSubmitUnsupportedError(rootHash, message);
       console.warn(
@@ -126,8 +154,8 @@ export async function uploadToStorage(
   }
 
   return {
-    rootHash: res?.rootHash ?? rootHash,
-    storageTxHash: res?.txHash ?? "",
+    rootHash: pickRootHash(res, rootHash),
+    storageTxHash: pickTxHash(res),
     alreadyStored: false,
     degraded: false,
   };

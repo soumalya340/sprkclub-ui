@@ -102,11 +102,9 @@ const connectors = connectorsForWallets(
 
 /**
  * Both chains stay registered so the wallet dropdown can offer a mainnet/testnet
- * toggle (see connect-wallet.tsx). This only changes which chain the wallet is
- * connected to — it does NOT change which contracts the app reads/writes, which
- * stay pinned to `activeChain` / `contracts` in chain/config.ts. Switching the
- * wallet to testnet while the app targets mainnet contracts (or vice versa)
- * will make writes fail or hit the wrong deployment; the UI warns for this.
+ * toggle (see connect-wallet.tsx). App contracts follow the `og-network` cookie
+ * via NetworkProvider / getNetwork(); the wallet should match that chain or the
+ * UI shows a wrong-chain warning.
  */
 export const wagmiConfig = createConfig({
   connectors,

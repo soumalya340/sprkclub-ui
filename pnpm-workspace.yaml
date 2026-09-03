@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
+  - blake-hash
   - bufferutil
   - es5-ext
   - esbuild

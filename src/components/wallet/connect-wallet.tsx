@@ -12,7 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useDisconnect, useSwitchChain } from "wagmi";
+import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,27 +27,50 @@ import { useNetwork } from "@/lib/chain/network-context";
 import { truncateAddress } from "@/lib/format";
 import { useSprkStore } from "@/lib/sprk-store";
 
+function isWalletRejection(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? String(error.name) : "";
+  const message = "message" in error ? String(error.message) : "";
+  return (
+    name === "UserRejectedRequestError" ||
+    /user rejected|denied|cancelled|canceled/i.test(message)
+  );
+}
+
 /**
  * Switches the whole app between 0G testnet and mainnet: the wallet's chain,
  * and — through the cookie `setNetwork` writes — the contracts, proposals,
  * storage and compute the server resolves for every later request.
  *
- * The wallet switch is attempted first. If the user rejects it in their wallet,
- * the app network is left alone so the two cannot drift apart.
+ * Wallet switch is best-effort. An explicit rejection leaves the app alone; any
+ * other wallet failure still moves the app so a missing/broken chain add cannot
+ * trap the cookie on the previous network. The wrong-chain banner covers drift.
  */
 function NetworkToggle() {
   const { network, setNetwork } = useNetwork();
+  const { isConnected, chainId } = useAccount();
   const { switchChainAsync, isPending } = useSwitchChain();
 
   async function select(next: OgNetwork) {
     if (next === network) return;
     const target = next === "mainnet" ? ogMainnet : ogTestnet;
-    try {
-      await switchChainAsync({ chainId: target.id });
-    } catch {
-      toast.error(`Keep the wallet on ${target.name} to switch the app to it.`);
-      return;
+
+    if (isConnected && chainId !== target.id) {
+      try {
+        await switchChainAsync({ chainId: target.id });
+      } catch (error) {
+        if (isWalletRejection(error)) {
+          toast.error(
+            `Wallet switch to ${target.name} was rejected. App stayed on ${network}.`,
+          );
+          return;
+        }
+        toast.warning(
+          `Couldn't switch the wallet to ${target.name}. Moving the app anyway — switch the wallet to transact.`,
+        );
+      }
     }
+
     // Persists the choice and reloads so server-rendered data follows.
     setNetwork(next);
   }
@@ -119,27 +142,33 @@ export function ConnectWallet({
 
         if (!connected) {
           return (
-            <Button
-              size={compact ? "sm" : "default"}
-              className={className}
-              onClick={openConnectModal}
-            >
-              <Wallet />
-              Connect wallet
-            </Button>
+            <div className="flex items-center gap-2">
+              <NetworkToggle />
+              <Button
+                size={compact ? "sm" : "default"}
+                className={className}
+                onClick={openConnectModal}
+              >
+                <Wallet />
+                Connect wallet
+              </Button>
+            </div>
           );
         }
 
         if (chain.unsupported) {
           return (
-            <Button
-              size={compact ? "sm" : "default"}
-              variant="outline"
-              onClick={openChainModal}
-            >
-              <TriangleAlert className="text-warn" />
-              Switch network
-            </Button>
+            <div className="flex items-center gap-2">
+              <NetworkToggle />
+              <Button
+                size={compact ? "sm" : "default"}
+                variant="outline"
+                onClick={openChainModal}
+              >
+                <TriangleAlert className="text-warn" />
+                Switch network
+              </Button>
+            </div>
           );
         }
 
