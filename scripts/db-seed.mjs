@@ -33,14 +33,15 @@ for (const p of proposals) {
     insert into proposals (
       id, title, description, cover, price_per_nft, funding_goal, type,
       valid_till, creator, created_at, status, stablecoin, start_date, end_date,
-      staked, total_funding, minted_count, withdrawn, disputed_by, dispute_reason
+      staked, total_funding, minted_count, withdrawn, disputed_by, dispute_reason,
+      network
     ) values (
       ${p.id}, ${p.title}, ${p.description}, ${p.cover}, ${p.pricePerNft},
       ${p.fundingGoal}, ${p.type}, ${p.validTill}, ${lower(p.creator)},
       ${p.createdAt}, ${p.status}, ${p.stablecoin}, ${p.startDate ?? null},
       ${p.endDate ?? null}, ${p.staked}, ${p.totalFunding}, ${p.mintedCount},
       ${p.withdrawn}, ${p.disputedBy ? lower(p.disputedBy) : null},
-      ${p.disputeReason ?? null}
+      ${p.disputeReason ?? null}, ${p.network ?? "testnet"}
     )`;
 
   for (const [voter, kind] of Object.entries(p.voters ?? {})) {

@@ -1,9 +1,8 @@
 import { defineChain } from "viem";
 
 /**
- * 0G Galileo testnet. Optimistic dispute Collab is deployed here.
- * Mainnet (16661) is defined below — flip NEXT_PUBLIC_OG_NETWORK to "mainnet"
- * once addresses are filled in after redeploy.
+ * 0G Galileo testnet. Kept for reference / older deployments — mainnet
+ * (16661) is the default network now that the Collab contracts are live there.
  */
 export const ogTestnet = defineChain({
   id: 16602,
@@ -29,7 +28,7 @@ export const ogMainnet = defineChain({
 export type OgNetwork = "testnet" | "mainnet";
 
 export const OG_NETWORK: OgNetwork =
-  process.env.NEXT_PUBLIC_OG_NETWORK === "mainnet" ? "mainnet" : "testnet";
+  process.env.NEXT_PUBLIC_OG_NETWORK === "testnet" ? "testnet" : "mainnet";
 
 export const activeChain = OG_NETWORK === "mainnet" ? ogMainnet : ogTestnet;
 
@@ -74,15 +73,23 @@ const TESTNET_DEPLOYMENT: Deployment = {
   relayer: "0xF0258C922928eB7B37C1B28201609Efa2437e29d",
 };
 
-/** Not deployed. Fill in after running the mainnet forge script. */
+/**
+ * Optimistic dispute-escrow deploy (no AgenticVerifier on money path).
+ * See deps/smart_contracts/README.md — 0G Mainnet chain 16661.
+ *
+ * `stablecoin` here is the same test/dev SprkToken used on testnet
+ * (permissionless `mint()` / `delegateMint()`) — it holds no real value and
+ * must be replaced with a real stablecoin before any production proposal
+ * collects real user funds.
+ */
 const MAINNET_DEPLOYMENT: Deployment = {
-  accessMaster: ZERO,
-  stablecoin: ZERO,
+  accessMaster: "0x1c1A950C00bfEFFef4a9C0FF580a2bd2135B6C27",
+  stablecoin: "0x0A550c1ad0Db4543a186C146DAb64D97eF27DAD0",
   agenticVerifier: ZERO,
-  collabFactory: ZERO,
-  collab: ZERO,
+  collabFactory: "0xdF48680B583b5B8e45Bf44850D6BFa1ec45a595D",
+  collab: "0xD993C727250E5cA5D8863320B73FAEdCE55f3f61",
   holder: ZERO,
-  relayer: ZERO,
+  relayer: "0xF0258C922928eB7B37C1B28201609Efa2437e29d",
 };
 
 export const contracts: Deployment =

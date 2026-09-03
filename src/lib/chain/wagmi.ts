@@ -9,7 +9,7 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
-import { ogMainnet, ogTestnet } from "@/lib/chain/config";
+import { ogMainnet } from "@/lib/chain/config";
 
 /**
  * WalletConnect project id. Create a free one at https://cloud.walletconnect.com
@@ -51,9 +51,8 @@ const connectors = connectorsForWallets(
 
 export const wagmiConfig = createConfig({
   connectors,
-  chains: [ogTestnet, ogMainnet],
+  chains: [ogMainnet],
   transports: {
-    [ogTestnet.id]: http(),
     [ogMainnet.id]: http(),
   },
   ssr: true,

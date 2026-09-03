@@ -3,6 +3,8 @@ export type ProposalType = "event" | "project" | "creative-work";
 /** SPRK is the only unit the app uses — 1 SPRK == 1 unit of price/goal/stake everywhere. */
 export type Stablecoin = "SPRK";
 export type VoteKind = "like" | "dislike";
+/** Which 0G Chain deployment a proposal's on-chain data lives on. */
+export type OgNetwork = "testnet" | "mainnet";
 
 /** Social handles stored without a leading @. */
 export interface ProposalSocials {
@@ -69,6 +71,8 @@ export interface Proposal {
   withdrawn: boolean;
   /** Deployed SprkClub contract, once the proposal is live on 0G Chain. */
   contractAddress?: string;
+  /** 0G Chain deployment this proposal's contract/txs belong to. */
+  network: OgNetwork;
   projectTwitter?: string;
   creatorTwitter?: string;
   projectInstagram?: string;

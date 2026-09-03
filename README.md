@@ -44,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/dashboard/campaigns` | Backed campaigns |
 | `/dashboard/started-campaigns` | Started campaigns + milestone escrow |
 | `/proposal/[id]` | Proposal detail |
-| `/join` | Join The Movement — claim testnet SPRK |
+| `/join` | Join The Movement — claim SPRK on the active network |
 
 UI components live under `src/components`; shared lib under `src/lib`.
 
@@ -155,7 +155,7 @@ The browser never calls 0G Storage directly. Relayer signs Storage +
 
 | Module | How it is used |
 |---|---|
-| **0G Chain** | `SprkClubCollab` (+ factory), `AccessMaster`, mock stablecoin on Galileo `16602`. Proof roots, audit roots, challenge / vote / finalize are real txs. |
+| **0G Chain** | `SprkClubCollab` (+ factory), `AccessMaster`, mock stablecoin on 0G Mainnet `16661` (legacy proposals on Galileo `16602`). Proof roots, audit roots, challenge / vote / finalize are real txs. |
 | **0G Storage** | Proof files and scorecard JSON are content-addressed by Merkle root. See degraded-upload caveat below. |
 | **0G Compute** | Advisory rubric scorecard via Serving Router (`og-compute.ts`). Labeled **Fallback Mode** when the router/key is unavailable — still writes an audit root. |
 
@@ -165,16 +165,34 @@ Contract sources: `deps/smart_contracts` (mirrors sibling `sprkclub-smartcontrac
 Verifier compute/sanitize patterns were reused from `deps/sprkclub-verifier`
 for the advisory scorecard path (not the old `validate()` bot).
 
-## Deployed addresses (0G Galileo testnet, chain 16602)
+## Deployed addresses (0G Mainnet, chain 16661) — active
 
-Optimistic dispute deploy (no AgenticVerifier on money path):
+Optimistic dispute deploy (no AgenticVerifier on money path). `SprkToken` here is
+still the test/dev token (permissionless `mint()`/`delegateMint()`) — it holds no
+real value and must be replaced with a real stablecoin before any production
+proposal collects real user funds.
+
+| Contract | Address |
+|---|---|
+| `AccessMaster` | `0x1c1A950C00bfEFFef4a9C0FF580a2bd2135B6C27` |
+| `SprkToken` (stablecoin) | `0x0A550c1ad0Db4543a186C146DAb64D97eF27DAD0` |
+| `SprkClubCollabFactory` | `0xdF48680B583b5B8e45Bf44850D6BFa1ec45a595D` |
+| `SprkClubCollab` (sample) | `0xD993C727250E5cA5D8863320B73FAEdCE55f3f61` |
+| Relayer / Creator / Deployer | `0xF0258C922928eB7B37C1B28201609Efa2437e29d` |
+
+Explorer: <https://chainscan.0g.ai>
+
+## Deployed addresses (0G Galileo testnet, chain 16602) — legacy
+
+Kept for reference. Proposals created before the mainnet cutover (2026-09-03)
+are marked `network: "testnet"` in the database and point at this deployment.
 
 | Contract | Address |
 |---|---|
 | `AccessMaster` | `0x1c78C8D3EF0506bF4d6Af08E8C1b41D150A57CF3` |
 | `SprkToken` (stablecoin) | `0x0E92016aF2fddC74D9709E9c26E1D95d2DC7f311` |
 | `SprkClubCollabFactory` | `0xCF7D80C69E93B8a728059EB605586c4373F71514` |
-| `SprkClubCollab` (sample) | `0x84eFcd6291168f3E3C618a28757eFB4B4344FC0F` |
+| `SprkClubCollab` (sample) | `0xD993C727250E5cA5D8863320B73FAEdCE55f3f61` |
 | Relayer / Creator / Deployer | `0xF0258C922928eB7B37C1B28201609Efa2437e29d` |
 
 Explorer: <https://chainscan-galileo.0g.ai>
@@ -182,10 +200,11 @@ Explorer: <https://chainscan-galileo.0g.ai>
 ## Known limitations — read this
 
 **1. 0G Storage uploads may degrade to root-only.**
-`@0glabs/0g-ts-sdk@0.3.3` can fail `Flow.submit` on the current Galileo Flow
-implementation. The Merkle root is still computed locally and recorded on-chain;
-responses carry `degraded: true` and the UI badges **Degraded Storage**. Set
-`OG_STRICT_STORAGE=1` to fail hard instead.
+`@0glabs/0g-ts-sdk@0.3.3` can fail `Flow.submit` on the deployed Flow
+implementation (seen on Galileo; unverified on mainnet). The Merkle root is
+still computed locally and recorded on-chain; responses carry `degraded: true`
+and the UI badges **Degraded Storage**. Set `OG_STRICT_STORAGE=1` to fail hard
+instead.
 
 **2. Compute is advisory.** The scorecard helps challengers and voters. It never
 calls `finalize`. Fallback Mode is labeled when 0G Compute is unavailable.
@@ -195,14 +214,14 @@ calls `finalize`. Fallback Mode is labeled when 0G Compute is unavailable.
 Create `.env.local`:
 
 ```bash
-OG_PRIVATE_KEY=<hex key, funded on 0G; server-side only, never NEXT_PUBLIC_>
+OG_PRIVATE_KEY=<hex key, funded on 0G mainnet; server-side only, never NEXT_PUBLIC_>
 # Prefer the on-chain relayer key for recordAuditRoot; for demo collabs where
 # the same key is creator+relayer, one key covers proof submit + audit root.
-NEXT_PUBLIC_OG_NETWORK=testnet
+NEXT_PUBLIC_OG_NETWORK=mainnet   # default; set to "testnet" for the legacy Galileo deploy
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<id>   # optional
 OG_COMPUTE_API_KEY=<0G Compute router key>  # optional — without it, Fallback Mode
-# OG_COMPUTE_BASE_URL=https://router-api-testnet.integratenetwork.work/v1
-# OG_COMPUTE_MODEL=qwen2.5-omni
+# OG_COMPUTE_BASE_URL=https://router-api.0g.ai/v1
+# OG_COMPUTE_MODEL=qwen3-vl-30b
 # OG_STRICT_STORAGE=1
 ```
 
@@ -218,27 +237,28 @@ pnpm dev   # start yourself — do not expect agents to boot servers
 
 Then:
 
-1. Open a campaign / started-campaigns dashboard on 0G Galileo.
+1. Open a campaign / started-campaigns dashboard on 0G Mainnet.
 2. As creator, submit a milestone proof — Storage root + on-chain proof.
 3. AI audit runs (Compute or Fallback Mode) and `recordAuditRoot` starts the window.
 4. Challenge with bond, vote with tickets, or finalize after 7 days.
 
 ```bash
 # Read proof roots
-curl "http://localhost:3000/api/milestones/0x84eFcd6291168f3E3C618a28757eFB4B4344FC0F/0/proof"
+curl "http://localhost:3000/api/milestones/0xD993C727250E5cA5D8863320B73FAEdCE55f3f61/0/proof"
 
 # Upload a proof
 curl -F "file=@./README.md" \
-  "http://localhost:3000/api/milestones/0x84eFcd6291168f3E3C618a28757eFB4B4344FC0F/0/proof"
+  "http://localhost:3000/api/milestones/0xD993C727250E5cA5D8863320B73FAEdCE55f3f61/0/proof"
 
 # Run evaluate / read scorecard
-curl -X POST "http://localhost:3000/api/milestones/0x84eFcd6291168f3E3C618a28757eFB4B4344FC0F/0/evaluate" \
+curl -X POST "http://localhost:3000/api/milestones/0xD993C727250E5cA5D8863320B73FAEdCE55f3f61/0/evaluate" \
   -H "content-type: application/json" \
   -d '{"proposalTitle":"Demo","proposalDescription":"…"}'
 ```
 
 ### Mainnet
 
-Contracts are **not** deployed to 0G mainnet (chain `16661`) yet. Deploy with
-the Foundry script in `sprkclub-smartcontract`, fill `MAINNET_DEPLOYMENT` in
-`src/lib/chain/config.ts`, and set `NEXT_PUBLIC_OG_NETWORK=mainnet`.
+0G mainnet (chain `16661`) is the **default network** — `MAINNET_DEPLOYMENT` in
+`src/lib/chain/config.ts` is filled in and `NEXT_PUBLIC_OG_NETWORK` defaults to
+`mainnet` when unset. Set `NEXT_PUBLIC_OG_NETWORK=testnet` to point the app at
+the legacy Galileo testnet deploy instead.

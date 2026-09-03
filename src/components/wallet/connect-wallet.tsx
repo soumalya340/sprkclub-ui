@@ -43,7 +43,14 @@ export function ConnectWallet({
 
   return (
     <ConnectButton.Custom>
-      {({ account, chain, openConnectModal, openAccountModal, mounted }) => {
+      {({
+        account,
+        chain,
+        openConnectModal,
+        openAccountModal,
+        openChainModal,
+        mounted,
+      }) => {
         const ready = mounted;
         const connected = ready && account && chain;
 
@@ -77,7 +84,7 @@ export function ConnectWallet({
             <Button
               size={compact ? "sm" : "default"}
               variant="outline"
-              onClick={openAccountModal}
+              onClick={openChainModal}
             >
               <TriangleAlert className="text-warn" />
               Switch network

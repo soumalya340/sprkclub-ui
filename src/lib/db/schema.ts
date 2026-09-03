@@ -44,6 +44,8 @@ export const proposals = pgTable(
     disputeReason: text("dispute_reason"),
     /** Deployed SprkClub contract address, once the proposal goes on-chain. */
     contractAddress: text("contract_address"),
+    /** 0G Chain deployment this proposal's contract/txs belong to. */
+    network: text("network").notNull().default("mainnet"),
     projectTwitter: text("project_twitter"),
     creatorTwitter: text("creator_twitter"),
     projectInstagram: text("project_instagram"),

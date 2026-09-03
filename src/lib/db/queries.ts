@@ -16,6 +16,7 @@ import {
   PROPOSAL_VOTE_WINDOW_MS,
   DISCARDED_VISIBLE_MS,
 } from "@/lib/proposal-lifecycle";
+import { OG_NETWORK } from "@/lib/chain/config";
 
 /** Addresses are stored lowercased so lookups never depend on checksum casing. */
 export const norm = (address: string) => address.trim().toLowerCase();
@@ -84,6 +85,7 @@ function toProposal({ proposal, votes: v, backers: b, milestones: m }: Rows): Pr
     disputeReason: proposal.disputeReason ?? undefined,
     withdrawn: proposal.withdrawn,
     contractAddress: proposal.contractAddress ?? undefined,
+    network: proposal.network as Proposal["network"],
     projectTwitter: proposal.projectTwitter ?? undefined,
     creatorTwitter: proposal.creatorTwitter ?? undefined,
     projectInstagram: proposal.projectInstagram ?? undefined,
@@ -204,6 +206,7 @@ export async function createProposal(
     createdAt,
     status: "voting",
     stablecoin: "SPRK",
+    network: OG_NETWORK,
     projectTwitter: input.projectTwitter || null,
     creatorTwitter: input.creatorTwitter || null,
     projectInstagram: input.projectInstagram || null,

@@ -32,8 +32,9 @@ function parseAmount(raw: string): number | null {
 }
 
 /**
- * Claim SprkCoin (SPRK) on testnet — the mock stable used in stakes, ticket
- * mints, and dispute bonds. Rate is fixed by the contract at 100 SPRK per 0G.
+ * Claim SprkCoin (SPRK) — the mock stable used in stakes, ticket mints, and
+ * dispute bonds. Rate is fixed by the contract at 100 SPRK per 0G. Network
+ * (mainnet/testnet) follows `activeChain` from chain/config.ts.
  */
 export default function JoinPage() {
   const inputId = useId();
@@ -117,9 +118,9 @@ export default function JoinPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <PageHeader
-        kicker="0G testnet"
+        kicker={activeChain.name}
         title="Join The Movement"
-        description="Claim SprkCoin to stake, mint tickets, and back campaigns on Galileo."
+        description={`Claim SprkCoin to stake, mint tickets, and back campaigns on ${activeChain.name}.`}
       />
 
       <div className="mt-10 rounded-xl border border-border bg-card p-6 sm:p-8">
