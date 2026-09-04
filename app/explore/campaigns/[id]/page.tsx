@@ -124,6 +124,27 @@ export default function CrowdfundingDetailPage() {
               {proposal.startDate ? formatDate(proposal.startDate) : "—"} –{" "}
               {proposal.endDate ? formatDate(proposal.endDate) : "—"}
             </p>
+            {proposal.withdrawnAmount > 0 ? (
+              <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">
+                <span className="text-muted-foreground">
+                  Released to creator
+                </span>
+                <span className="font-mono tabular-nums text-warn">
+                  −{formatAmount(proposal.withdrawnAmount, proposal.stablecoin)}
+                </span>
+              </div>
+            ) : null}
+            {proposal.withdrawnAmount > 0 ? (
+              <div className="mt-1.5 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Still in escrow</span>
+                <span className="font-mono tabular-nums">
+                  {formatAmount(
+                    proposal.totalFunding - proposal.withdrawnAmount,
+                    proposal.stablecoin,
+                  )}
+                </span>
+              </div>
+            ) : null}
           </div>
           <FundActions proposal={proposal} />
 

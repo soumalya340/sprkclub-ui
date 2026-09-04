@@ -111,7 +111,8 @@ export async function POST(
         if (!isCreator) return deny("Only the creator can withdraw");
         // Mirrors SprkClubCollab: the first tranche needs a met goal and no
         // proof at all (capped at the staked 20%); later tranches need a
-        // finalized milestone to have unpaused the contract.
+        // finalized milestone to have unpaused the contract, and are capped
+        // the same way by `withdrawFunds`.
         if (!proposal.withdrawn) {
           if (proposal.totalFunding < proposal.fundingGoal) {
             return deny("The funding goal must be reached before the first tranche");
@@ -119,7 +120,8 @@ export async function POST(
         } else if (!proposal.milestones.some((m) => m.status === "approved")) {
           return deny("A milestone must be finalized before the next tranche");
         }
-        await setWithdrawn(id);
+        const trancheAmount = (proposal.fundingGoal * 20) / 100;
+        await setWithdrawn(id, trancheAmount);
         break;
       }
 

@@ -94,6 +94,7 @@ function toProposal({ proposal, votes: v, backers: b, milestones: m }: Rows): Pr
     disputedBy: proposal.disputedBy ?? undefined,
     disputeReason: proposal.disputeReason ?? undefined,
     withdrawn: proposal.withdrawn,
+    withdrawnAmount: proposal.withdrawnAmount,
     contractAddress: proposal.contractAddress ?? undefined,
     network: proposal.network as Proposal["network"],
     projectTwitter: proposal.projectTwitter ?? undefined,
@@ -353,10 +354,14 @@ export async function recordMint(
     .where(eq(proposals.id, proposalId));
 }
 
-export async function setWithdrawn(proposalId: string) {
+export async function setWithdrawn(proposalId: string, amount: number) {
   await db
     .update(proposals)
-    .set({ withdrawn: true, updatedAt: new Date() })
+    .set({
+      withdrawn: true,
+      withdrawnAmount: sql`${proposals.withdrawnAmount} + ${amount}`,
+      updatedAt: new Date(),
+    })
     .where(eq(proposals.id, proposalId));
 }
 

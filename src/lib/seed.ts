@@ -39,6 +39,7 @@ export const SEED_PROPOSALS: Proposal[] = [
     backers: [],
     milestones: [],
     withdrawn: false,
+    withdrawnAmount: 0,
     network: "testnet",
   },
   {
@@ -68,6 +69,7 @@ export const SEED_PROPOSALS: Proposal[] = [
     backers: [{ address: BACKER_ADDRESS, minted: 4, amount: 160 }],
     milestones: [],
     withdrawn: false,
+    withdrawnAmount: 0,
     network: "testnet",
   },
   {
@@ -107,6 +109,7 @@ export const SEED_PROPOSALS: Proposal[] = [
       },
     ],
     withdrawn: false,
+    withdrawnAmount: 0,
     network: "testnet",
   },
   {
@@ -132,6 +135,7 @@ export const SEED_PROPOSALS: Proposal[] = [
     backers: [],
     milestones: [],
     withdrawn: false,
+    withdrawnAmount: 0,
     network: "testnet",
   },
 ];

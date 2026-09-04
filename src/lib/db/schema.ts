@@ -40,6 +40,8 @@ export const proposals = pgTable(
     totalFunding: doublePrecision("total_funding").notNull().default(0),
     mintedCount: integer("minted_count").notNull().default(0),
     withdrawn: boolean("withdrawn").notNull().default(false),
+    /** Cumulative amount released to the creator across every tranche so far. */
+    withdrawnAmount: doublePrecision("withdrawn_amount").notNull().default(0),
     disputedBy: text("disputed_by"),
     disputeReason: text("dispute_reason"),
     /** Deployed SprkClub contract address, once the proposal goes on-chain. */

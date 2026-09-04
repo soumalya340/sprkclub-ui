@@ -82,6 +82,8 @@ export interface Proposal {
   disputedBy?: string;
   disputeReason?: string;
   withdrawn: boolean;
+  /** Cumulative amount released to the creator across every tranche so far. */
+  withdrawnAmount: number;
   /** Deployed SprkClub contract, once the proposal is live on 0G Chain. */
   contractAddress?: string;
   /** 0G Chain deployment this proposal's contract/txs belong to. */

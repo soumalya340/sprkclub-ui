@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { formatAmount, stakeAmount } from "@/lib/format";
+import { formatAmount, stakeAmount, truncateAddress } from "@/lib/format";
 import { useAddress, useSprkStore } from "@/lib/sprk-store";
 import type { Proposal } from "@/lib/types";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
@@ -26,6 +26,8 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
   const dispute = useSprkStore((s) => s.dispute);
   const claimback = useSprkStore((s) => s.claimback);
   const [reason, setReason] = useState("");
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   if (!address) {
     return (
@@ -93,19 +95,64 @@ export function FundActions({ proposal }: { proposal: Proposal }) {
       {proposal.status === "active" || proposal.status === "completed" ? (
         isCreator ? (
           <>
-            <Button
-              disabled={!canWithdraw}
-              onClick={async () => {
-                const ok = await withdraw(proposal.id);
-                if (ok) toast.success("Funds withdrawn");
-              }}
-            >
-              {isFirstTranche
-                ? `Withdraw first tranche · ${formatAmount(trancheCap, proposal.stablecoin)}`
-                : approved
-                  ? "Withdraw next tranche"
-                  : "First tranche withdrawn"}
-            </Button>
+            <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+              <DialogTrigger asChild>
+                <Button disabled={!canWithdraw}>
+                  {isFirstTranche
+                    ? `Withdraw first tranche · ${formatAmount(trancheCap, proposal.stablecoin)}`
+                    : approved
+                      ? "Withdraw next tranche"
+                      : "First tranche withdrawn"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    Withdraw {formatAmount(trancheCap, proposal.stablecoin)}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {isFirstTranche
+                      ? "The first tranche needs no proof — it is capped at the 20% you staked, and releases straight to your wallet."
+                      : "This milestone was finalized, so the next tranche releases straight to your wallet."}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="rounded-lg bg-secondary/60 p-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Sent to</span>
+                    <span className="font-mono text-xs">
+                      {truncateAddress(address, 6)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-mono tabular-nums">
+                      {formatAmount(trancheCap, proposal.stablecoin)}
+                    </span>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    disabled={withdrawing}
+                    onClick={async () => {
+                      setWithdrawing(true);
+                      try {
+                        const ok = await withdraw(proposal.id);
+                        if (ok) {
+                          toast.success(
+                            `Withdrew ${formatAmount(trancheCap, proposal.stablecoin)} to your wallet`,
+                          );
+                          setWithdrawOpen(false);
+                        }
+                      } finally {
+                        setWithdrawing(false);
+                      }
+                    }}
+                  >
+                    {withdrawing ? "Withdrawing…" : "Confirm withdrawal"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             {isFirstTranche ? (
               <p className="text-xs text-muted-foreground">
                 The first tranche needs no proof — it is capped at{" "}
